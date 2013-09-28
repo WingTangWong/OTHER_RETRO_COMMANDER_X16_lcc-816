@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include "lburg.h"
 static char rcsid[] = "$Id$";
 /*lint -e616 -e527 -e652 -esym(552,yynerrs) -esym(563,yynewstate,yyerrlab) */
@@ -72,25 +73,38 @@ static int code = 0;
 
 static int get(void) {
 	if (*bp == 0) {
+		int raw = 0;
 		bp = buf;
 		*bp = 0;
-		if (fgets(buf, sizeof buf, infp) == NULL)
-			return EOF;
-		yylineno++;
-		while (buf[0] == '%' && buf[1] == '{' && buf[2] == '\n') {
-			for (;;) {
-				if (fgets(buf, sizeof buf, infp) == NULL) {
-					yywarn("unterminated %{...%}\n");
-					return EOF;
-				}
-				yylineno++;
-				if (strcmp(buf, "%}\n") == 0)
-					break;
-				fputs(buf, outfp);
-			}
+
+		for(;;)
+		{
 			if (fgets(buf, sizeof buf, infp) == NULL)
+			{
+				if (raw) yywarn("unterminated %{...%}\n");
 				return EOF;
+			}
 			yylineno++;
+			if (raw)
+			{
+				if (strcmp(buf,"%}\n") == 0) {
+					raw = 0;
+				} else {
+					fputs(buf, outfp);
+				}
+				continue;
+			}
+
+			/* # comment */
+			if (buf[0] == '#') continue;
+
+			/* %{ code */
+			if (strcmp(buf,"%{\n") == 0) {
+				raw++;
+				continue;
+			}
+
+			break;
 		}
 	}
 	return *bp++;
@@ -162,6 +176,61 @@ int yylex(void) {
 			bp = *p == '"' ? p + 1 : p;
 			code++;
 			return TEMPLATE;
+		} else if (c == '{') {
+			/* multi-line template */
+			char *buffer = NULL;
+			int bsize = 0;
+			int tsize = 0;
+			int lastc = '\n';
+			int xxlineno = yylineno;
+
+			for(;;)
+			{
+				c = get();
+				if (c == EOF) {
+					int tmp = yylineno;
+					yylineno = xxlineno;
+					yyerror("unterminated template\n");
+					yylineno = tmp;
+				}
+				if (lastc == '\n' && isspace(c)) continue;
+				if (lastc == '\n' && c == '}') break;
+				lastc = c;
+				if (bsize < tsize + 2)
+				{
+					bsize *= 2;
+					if (!bsize) bsize = 512;
+					buffer = realloc(buffer, bsize);
+					assert(buffer);
+				}
+
+				switch(c)
+				{
+				case '\\':
+					buffer[tsize++] = '\\';
+					buffer[tsize++] = '\\';
+					break;
+				case '\n':
+					buffer[tsize++] = '\\';
+					buffer[tsize++] = 'n';
+					break;
+				case '\t':
+					buffer[tsize++] = '\\';
+					buffer[tsize++] = 't';
+					break;
+				default: 
+					buffer[tsize++] = c;
+					break;
+				}
+			}
+
+			yylval.string = alloc(tsize + 1);
+			strncpy(yylval.string, buffer, tsize);
+			yylval.string[tsize] = 0;
+			code++;
+			free(buffer);
+			return TEMPLATE;
+		
 		} else if (isdigit(c)) {
 			int n = 0;
 			do {
