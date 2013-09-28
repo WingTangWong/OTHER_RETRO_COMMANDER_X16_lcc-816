@@ -12,6 +12,7 @@ xx(symbolic/osf, symbolic64IR) \
 xx(symbolic/irix,symbolicIR) \
 xx(symbolic,     symbolicIR) \
 xx(bytecode,     bytecodeIR) \
+xx(wdc65816/iigs,wdc65816IR) \
 xx(null,         nullIR)
 
 #undef xx
