@@ -17,15 +17,16 @@ B=$(BUILDDIR)/
 T=$(TSTDIR)/
 
 what:
-	-@echo make all rcc lburg cpp lcc bprint liblcc triple clean clobber
+	-@echo make all rcc lburg cpp lcc bprint ops liblcc triple clean clobber
 
-all::	rcc lburg cpp lcc bprint liblcc
+all::	rcc lburg cpp lcc bprint ops liblcc
 
 rcc:	$Brcc$E
 lburg:	$Blburg$E
 cpp:	$Bcpp$E
 lcc:	$Blcc$E
 bprint:	$Bbprint$E
+ops:	$Bops$E
 liblcc:	$Bliblcc$A
 
 RCCOBJS=$Balloc$O \
