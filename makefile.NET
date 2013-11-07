@@ -28,7 +28,7 @@ bprint:	$Bbprint$E
 liblcc:	$Bliblcc.dll
 
 RCCOBJS=$Balloc$O \
-	$Bbind2$O \
+	$Bbind$O \
 	$Bdag$O \
 	$Bdagcheck$O \
 	$Bdecl$O \
@@ -73,7 +73,7 @@ $Blibrcc$A:	$(RCCOBJS)
 $(RCCOBJS):	src/c.h src/token.h src/config.h
 
 $Balloc$O:	src/alloc.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/alloc.c
-$Bbind2$O:	src/bind2.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/bind2.c
+$Bbind$O:	src/bind.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/bind.c
 $Bdag$O:	src/dag.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/dag.c
 $Bdecl$O:	src/decl.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/decl.c
 $Benode$O:	src/enode.c;	$(CC) $(CFLAGS) -c -Isrc -Fo$@ src/enode.c
@@ -345,7 +345,7 @@ clobber::	clean
 		-del /q $B*.dll $B*.exp
 
 RCCSRCS=src/alloc.c \
-	src/bind2.c \
+	src/bind.c \
 	src/dag.c \
 	src/decl.c \
 	src/enode.c \
