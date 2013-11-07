@@ -11,6 +11,8 @@ xx(symbolic/osf, symbolic64IR) \
 xx(symbolic/irix,symbolicIR) \
 xx(symbolic,     symbolicIR) \
 xx(bytecode,     bytecodeIR) \
+xx(msil,         msilIR) \
+xx(msil/win32,   msilIR) \
 xx(null,         nullIR)
 
 #undef xx
