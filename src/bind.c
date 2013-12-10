@@ -14,6 +14,7 @@ xx(symbolic,     symbolicIR) \
 xx(bytecode,     bytecodeIR) \
 xx(msil,         msilIR) \
 xx(msil/win32,   msilIR) \
+xx(wdc65816/iigs,wdc65816IR) \
 xx(null,         nullIR)
 
 #undef xx

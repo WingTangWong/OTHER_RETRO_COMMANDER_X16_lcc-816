@@ -63,7 +63,8 @@ RCCOBJS=$Balloc$O \
 	$Bsparc$O \
 	$Bstab$O \
 	$Bx86$O \
-	$Bx86linux$O
+	$Bx86linux$O \
+	$Bwdc65816$O
 
 $Brcc$E::	$Bmain$O $Blibrcc$A $(EXTRAOBJS)
 		$(LD) $(LDFLAGS) -o $@ $Bmain$O $(EXTRAOBJS) $Blibrcc$A $(EXTRALIBS)
@@ -109,6 +110,7 @@ $Bmips$O:	$Bmips.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bmips.c
 $Bsparc$O:	$Bsparc.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bsparc.c
 $Bx86$O:	$Bx86.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86.c
 $Bx86linux$O:	$Bx86linux.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86linux.c
+$Bwdc65816$O:	$Bwdc65816.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bwdc65816.c
 
 $Bdagcheck.c:	$Blburg$E src/dagcheck.md; $Blburg src/dagcheck.md $@
 $Balpha.c:	$Blburg$E src/alpha.md;    $Blburg src/alpha.md    $@
@@ -116,6 +118,7 @@ $Bmips.c:	$Blburg$E src/mips.md;     $Blburg src/mips.md     $@
 $Bsparc.c:	$Blburg$E src/sparc.md;    $Blburg src/sparc.md    $@
 $Bx86.c:	$Blburg$E src/x86.md;      $Blburg src/x86.md      $@
 $Bx86linux.c:	$Blburg$E src/x86linux.md; $Blburg src/x86linux.md $@
+$Bwdc65816.c:	$Blburg$E src/wdc65816.md; $Blburg src/wdc65816.md $@
 
 $Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
 $Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
@@ -264,7 +267,8 @@ RCCSRCS=src/alloc.c \
 	$Bmips.c \
 	$Bsparc.c \
 	$Bx86linux.c \
-	$Bx86.c
+	$Bx86.c \
+	$Bwdc65816.c
 
 C=$Blcc -A -d0.6 -Wo-lccdir=$(BUILDDIR) -Isrc -I$(BUILDDIR)
 triple:	$B2rcc$E
