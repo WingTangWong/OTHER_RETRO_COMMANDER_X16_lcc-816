@@ -183,6 +183,7 @@ int yylex(void) {
 			int tsize = 0;
 			int lastc = '\n';
 			int xxlineno = yylineno;
+			int indent = 0;
 
 			for(;;)
 			{
@@ -193,16 +194,28 @@ int yylex(void) {
 					yyerror("unterminated template\n");
 					yylineno = tmp;
 				}
-				if (lastc == '\n' && isspace(c)) continue;
+				if (lastc == '\n' && isspace(c))
+				{
+					indent++;
+					continue;
+				}
 				if (lastc == '\n' && c == '}') break;
-				lastc = c;
-				if (bsize < tsize + 2)
+				if (bsize < tsize + 4)
 				{
 					bsize *= 2;
 					if (!bsize) bsize = 512;
 					buffer = realloc(buffer, bsize);
 					assert(buffer);
 				}
+
+				if (indent)
+				{
+					// indent line.
+					buffer[tsize++] = '\\';
+					buffer[tsize++] = 't';
+				}
+				lastc = c;
+				indent = 0;
 
 				switch(c)
 				{
