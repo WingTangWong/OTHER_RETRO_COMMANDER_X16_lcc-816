@@ -167,7 +167,7 @@ void parseflags(int argc, char *argv[]) {
 
 	for (i = 0; i < argc; i++)
 		if (strcmp(argv[i], "-d") == 0)
-			dflag = 1;
+			dflag++; /* = 1; */
 		else if (strcmp(argv[i], "-b") == 0)	/* omit */
 			bflag = 1;			/* omit */
 }
