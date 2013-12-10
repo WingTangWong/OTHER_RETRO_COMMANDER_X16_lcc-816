@@ -1850,14 +1850,21 @@ int yylex(void) {
 				}
 				if (lastc == '\n' && isspace(c)) continue;
 				if (lastc == '\n' && c == '}') break;
-				lastc = c;
-				if (bsize < tsize + 2)
+				if (bsize < tsize + 4)
 				{
 					bsize *= 2;
 					if (!bsize) bsize = 512;
 					buffer = realloc(buffer, bsize);
 					assert(buffer);
 				}
+
+				if (lastc == '\n')
+				{
+					// indent line.
+					buffer[tsize++] = '\\';
+					buffer[tsize++] = 't';
+				}
+				lastc = c;
 
 				switch(c)
 				{
