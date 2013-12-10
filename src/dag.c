@@ -646,6 +646,14 @@ static Node visit(Node p, int listed) {
 			p->kids[0] = visit(p->kids[0], 0);
 			p->kids[1] = visit(p->kids[1], 0);
 		}
+		// iigs -- do not "optimize" dp or constants.
+		// since that would generate a REGISTER.
+		else if (IR->x.preventCSE && IR->x.preventCSE(p)) {
+			p = newnode(p->op, p->kids[0], p->kids[1], p->syms[0]);
+			p->count = 1;
+			p->kids[0] = visit(p->kids[0], 0);
+			p->kids[1] = visit(p->kids[1], 0);
+		}
 		else {
 			p->kids[0] = visit(p->kids[0], 0);
 			p->kids[1] = visit(p->kids[1], 0);
@@ -653,7 +661,7 @@ static Node visit(Node p, int listed) {
 			assert(!p->syms[2]->defined);
 			p->syms[2]->ref = 1;
 			p->syms[2]->u.t.cse = p;
-
+		
 			*tail = asgnnode(p->syms[2], p);
 			tail = &(*tail)->link;
 			if (!listed)

@@ -908,11 +908,14 @@ static void checkref(Symbol p, void *cl) {
 			warning("local `%t %s' is not referenced\n",
 				p->type, p->name);
 	}
+	// IIgs - don't promote to register (IR->noreg?)
+	#if 0
 	if (p->sclass == AUTO
 	&& (p->scope  == PARAM && regcount == 0
 	 || p->scope  >= LOCAL)
 	&& !p->addressed && isscalar(p->type) && p->ref >= 3.0)
 		p->sclass = REGISTER;
+	#endif
 	if (level == GLOBAL && p->sclass == STATIC && !p->defined
 	&& isfunc(p->type) && p->ref)
 		error("undefined static `%t %s'\n", p->type, p->name);
