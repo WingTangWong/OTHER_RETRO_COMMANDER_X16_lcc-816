@@ -56,8 +56,9 @@ RCCOBJS=$Balloc$O \
 	$Btypes$O \
 	$Bnull$O \
 	$Bsymbolic$O \
-	$Bgen$O \
 	$Bbytecode$O \
+	$Bmsil$O \
+	$Bgen$O \
 	$Balpha$O \
 	$Bmips$O \
 	$Bsparc$O \
@@ -99,6 +100,7 @@ $Bstring$O:	src/string.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/string.c
 $Bsym$O:	src/sym.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/sym.c
 $Bsymbolic$O:	src/symbolic.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/symbolic.c
 $Bbytecode$O:	src/bytecode.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/bytecode.c
+$Bmsil$O:	src/msil.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/msil.c
 $Btrace$O:	src/trace.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/trace.c
 $Btree$O:	src/tree.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/tree.c
 $Btypes$O:	src/types.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/types.c
@@ -225,7 +227,7 @@ testclean:
 
 clean::		testclean
 		$(RM) $B*$O
-		$(RM) $Bdagcheck.c $Balpha.c $Bmips.c $Bx86.c $Bsparc.c $Bx86linux.c
+		$(RM) $Bdagcheck.c $Balpha.c $Bmips.c $Bx86.c $Bsparc.c $Bx86linux.c $Bwdc65816.c
 		$(RM) $Brcc1$E $Brcc1$E $B1rcc$E $B2rcc$E
 		$(RM) $B*.ilk
 
@@ -260,14 +262,15 @@ RCCSRCS=src/alloc.c \
 	src/null.c \
 	src/symbolic.c \
 	src/bytecode.c \
+	src/msil.c \
 	src/gen.c \
 	src/stab.c \
 	$Bdagcheck.c \
 	$Balpha.c \
 	$Bmips.c \
 	$Bsparc.c \
-	$Bx86linux.c \
 	$Bx86.c \
+	$Bx86linux.c \
 	$Bwdc65816.c
 
 C=$Blcc -A -d0.6 -Wo-lccdir=$(BUILDDIR) -Isrc -I$(BUILDDIR)
