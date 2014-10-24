@@ -13,11 +13,15 @@ static int doop(int op, int type, const char *sz, const char *opname) {
 	int count = 0;
 	static int last;
 
-	if (op == LOAD)
-		return 0;
+	//if (op == LOAD)
+	//	return 0;
 	if (last != 0 && last != op)
 		printf("\n");
+
 	last = op;
+
+	printf("%%term");
+
 	if (type == B || type == V) {
 		printf(" %s=%d", opname, op + type);
 		count++;
@@ -56,6 +60,10 @@ int main(int argc, char *argv[]) {
 #include "ops.h"
 #undef gop
 #undef op
+
+	/* and VREGP */
+	printf("\n%%term VREGP=711\n");
+
 	fprintf(stderr, "%d operators\n", count);
 	return EXIT_SUCCESS;
 }

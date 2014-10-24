@@ -5,6 +5,9 @@
 static char rcsid[] = "$Id$";
 /*lint -e616 -e527 -e652 -esym(552,yynerrs) -esym(563,yynewstate,yyerrlab) */
 static int yylineno = 0;
+
+int yylex(void);
+
 %}
 %union {
 	int n;
@@ -15,7 +18,7 @@ static int yylineno = 0;
 %term START
 %term PPERCENT
 
-%token  <string>        ID TEMPLATE CODE
+%token  <string>        ID TEMPLATE FUNCTION COST
 %token  <n>             INT
 %type	<string>	nonterm cost
 %type   <tree>          tree
@@ -42,7 +45,8 @@ blist	: /* lambda */
 	;
 
 rules	: /* lambda */
-	| rules nonterm ':' tree TEMPLATE cost '\n'	{ rule($2, $4, $5, $6); }
+	| rules nonterm ':' tree TEMPLATE cost '\n'	{ rule($2, $4, $5, NULL, $6); }
+	| rules nonterm ':' tree FUNCTION cost '\n'	{ rule($2, $4, NULL, $5, $6); }
 	| rules '\n'
 	| rules error '\n'		{ yyerrok; }
 	;
@@ -55,7 +59,7 @@ tree	: ID                            { $$ = tree($1,  0,  0); }
 	| ID '(' tree ',' tree ')'      { $$ = tree($1, $3, $5); }
 	;
 
-cost	: CODE				{ if (*$1 == 0) $$ = "0"; }
+cost	: COST				{ if (*$1 == 0) $$ = "0"; }
 	;
 %%
 #include <assert.h>
@@ -69,7 +73,7 @@ FILE *infp = NULL;
 FILE *outfp = NULL;
 static char buf[BUFSIZ], *bp = buf;
 static int ppercent = 0;
-static int code = 0;
+static int cost = 0;
 
 static int get(void) {
 	if (*bp == 0) {
@@ -126,7 +130,7 @@ void yyerror(char *fmt, ...) {
 int yylex(void) {
 	int c;
 
-	if (code) {
+	if (cost) {
 		char *p;
 		bp += strspn(bp, " \t\f");
 		p = strchr(bp, '\n');
@@ -138,8 +142,8 @@ int yylex(void) {
 		strncpy(yylval.string, bp, p - bp);
 		yylval.string[p - bp] = 0;
 		bp = p;
-		code--;
-		return CODE;
+		cost--;
+		return COST;
 	}
 	while ((c = get()) != EOF) {
 		switch (c) {
@@ -174,7 +178,7 @@ int yylex(void) {
 			strncpy(yylval.string, bp, p - bp);
 			yylval.string[p - bp] = 0;
 			bp = *p == '"' ? p + 1 : p;
-			code++;
+			cost++;
 			return TEMPLATE;
 		} else if (c == '{') {
 			/* multi-line template */
@@ -240,10 +244,65 @@ int yylex(void) {
 			yylval.string = alloc(tsize + 1);
 			strncpy(yylval.string, buffer, tsize);
 			yylval.string[tsize] = 0;
-			code++;
+			cost++;
 			free(buffer);
 			return TEMPLATE;
 		
+		} else if (c == '^' && *bp == '{') {
+			// inline code!
+			// read until \n}
+
+
+			/* multi-line template */
+			char *buffer = NULL;
+			int bsize = 0;
+			int tsize = 0;
+			int lastc = '\n';
+			int xxlineno = yylineno;
+			int indent = 0;
+
+			bp++; // skip '{'
+
+
+			bsize = 512;
+			buffer = realloc(buffer, bsize);
+			assert(buffer);
+
+			// buffer is 512 bytes so this is safe :)
+			//tsize = sprintf(buffer, "#line %d\n", yylineno-1);
+			tsize = 0;
+			
+			for(;;)
+			{
+				c = get();
+				if (c == EOF) {
+					int tmp = yylineno;
+					yylineno = xxlineno;
+					yyerror("unterminated function\n");
+					yylineno = tmp;
+				}
+
+				if (lastc == '\n' && c == '}') break;
+				if (bsize < tsize + 1)
+				{
+					bsize *= 2;
+					if (!bsize) bsize = 512;
+					buffer = realloc(buffer, bsize);
+					assert(buffer);
+				}
+
+				lastc = c;
+
+				buffer[tsize++] = c;
+			}
+
+			yylval.string = alloc(tsize + 1);
+			strncpy(yylval.string, buffer, tsize);
+			yylval.string[tsize] = 0;
+			cost++;
+			free(buffer);
+			return FUNCTION;
+
 		} else if (isdigit(c)) {
 			int n = 0;
 			do {
