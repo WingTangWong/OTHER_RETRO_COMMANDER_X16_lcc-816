@@ -262,6 +262,12 @@ int range(Node p, int lo, int hi) {
 	}
 	return LBURG_MAX;
 }
+
+void gen_dumptree(Node p) {
+	dumptree(p);
+	fprintf(stderr, "\n");
+}
+
 static void dumptree(Node p) {
 	if (p->op == VREG+P && p->syms[0]) {
 		fprint(stderr, "VREGP(%s)", p->syms[0]->name);

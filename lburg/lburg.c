@@ -630,7 +630,7 @@ static void emitfunction(Rule rules) {
 		if (!r->function) continue;
 
 		print("static void %Pfunction_%d(NODEPTR_TYPE p) {\n", r->ern);
-		print("\tNODEPTR_TYPE kids[10];\n\tshort *nts;\n");
+		print("\tNODEPTR_TYPE kids[10] = {};\n\tshort *nts;\n");
 		print("\t_kids(p, %d, kids);\n", r->ern);
 		print("\tnts = _nts[%d];\n\n", r->ern);
 
