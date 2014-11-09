@@ -14,6 +14,7 @@ typedef struct {
 	void (*_kids)(Node, int, Node*);
 	char **_string;
 	char **_templates;
+	void (**_functions)(Node);
 	char *_isinstruction;
 	char **_ntname;
 	void (*emit2)(Node);

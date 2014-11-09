@@ -1,4 +1,5 @@
 # $Id$
+BUILDDIR ?= o
 A=.a
 O=.o
 E=
@@ -147,6 +148,8 @@ $Blburg$O $Bgram$O:	lburg/lburg.h
 
 $Blburg$O:	lburg/lburg.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/lburg.c
 $Bgram$O:	lburg/gram.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/gram.c
+
+lburg/gram.c: lburg/gram.y;	$(YACC) $< -o $@
 
 CPPOBJS=$Bcpp$O $Blexer$O $Bnlist$O $Btokens$O $Bmacro$O $Beval$O \
 	$Binclude$O $Bhideset$O $Bgetopt$O $Bunix$O

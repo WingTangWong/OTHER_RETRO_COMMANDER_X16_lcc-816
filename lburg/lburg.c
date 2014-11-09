@@ -26,6 +26,7 @@ static void ckreach(Nonterm p);
 static void emitclosure(Nonterm nts);
 static void emitcost(Tree t, char *v);
 static void emitdefs(Nonterm nts, int ntnumber);
+static void emitfunction(Rule rules);
 static void emitheader(void);
 static void emitkids(Rule rules, int nrules);
 static void emitnts(Rule rules, int nrules);
@@ -90,6 +91,9 @@ int main(int argc, char *argv[]) {
 	if (start)
 		emitlabel(terms, start, ntnumber);
 	emitkids(rules, nrules);
+
+	emitfunction(rules);
+
 	if (!feof(infp))
 		while ((c = getc(infp)) != EOF)
 			putc(c, outfp);
@@ -240,7 +244,7 @@ Tree tree(char *id, Tree left, Tree right) {
 }
 
 /* rule - create & initialize a rule with the given fields */
-Rule rule(char *id, Tree pattern, char *template, char *code) {
+Rule rule(char *id, Tree pattern, char *template, char *function, char *code) {
 	Rule r = alloc(sizeof *r), *q;
 	Term p = pattern->op;
 	char *end;
@@ -252,7 +256,8 @@ Rule rule(char *id, Tree pattern, char *template, char *code) {
 	*q = r;
 	r->pattern = pattern;
 	r->ern = ++nrules;
-	r->template = template;
+	r->template = template ? template : stringf("# generated function_%d\\n", r->ern);
+	r->function = function;
 	r->code = code;
 	r->cost = strtol(code, &end, 10);
 	if (*end) {
@@ -601,6 +606,61 @@ static void emitrecord(char *pre, Rule r, char *c, int cost) {
 	print("%s}\n", pre);
 }
 
+
+static void emitfunction(Rule rules) {
+	Rule r;
+
+	/*
+	static void _function_1(NODEPTR_TYPE p) {
+		
+		NODEPTR_TYPE kids[10];
+		short *nts;
+
+		_kids(p, rulenum, kids);
+		nts = _nts[rulenum];
+
+		<< code >>
+	}
+	*/
+
+
+
+
+	for (r = rules; r; r = r->link) {
+		if (!r->function) continue;
+
+		print("static void %Pfunction_%d(NODEPTR_TYPE p) {\n", r->ern);
+		print("\tNODEPTR_TYPE kids[10] = {};\n\tshort *nts;\n");
+		print("\t_kids(p, %d, kids);\n", r->ern);
+		print("\tnts = _nts[%d];\n\n", r->ern);
+
+		print("%s", r->function);
+
+		print("}\n\n");
+	}
+
+
+	/* functions */
+
+	print("typedef void (*NodeFunction)(NODEPTR_TYPE);\n");
+	/* then the function pointers */
+	print("\nstatic NodeFunction %Pfunctions[] = {\n");
+	print("/* 0 */%1NULL,\n");
+
+	for (r = rules; r; r = r->link) {
+		if (r->function) {
+			print("/* %d */%1%Pfunction_%d,\n", r->ern, r->ern);
+		} else {
+			print("/* %d */%1NULL,\n", r->ern);
+		}
+	}
+
+	print("};\n\n");
+
+
+}
+
+
 /* emitrule - emit decoding vectors and _rule */
 static void emitrule(Nonterm nts) {
 	Nonterm p;
@@ -633,9 +693,16 @@ static void emitstring(Rule rules) {
 	print("\nstatic char %Pisinstruction[] = {\n");
 	print("/* 0 */%10,\n");
 	for (r = rules; r; r = r->link) {
-		int len = strlen(r->template);
+		int isinstr = 0;
+		if (r->function) {
+			isinstr = 1;
+		} else {
+			int len = strlen(r->template);
+			if (len >= 2 && r->template[len-2] == '\\' && r->template[len-1] == 'n') isinstr = 1;
+		}
+
 		print("/* %d */%1%d,%1/* %s */\n", r->ern,
-			len >= 2 && r->template[len-2] == '\\' && r->template[len-1] == 'n',
+			isinstr,
 			r->template);
 	}
 	print("};\n");
@@ -644,6 +711,8 @@ static void emitstring(Rule rules) {
 	for (r = rules; r; r = r->link)
 		print("/* %d */%1\"%R\",\n", r->ern, r);
 	print("};\n\n");
+
+
 }
 
 /* emitstruct - emit the definition of the state structure */

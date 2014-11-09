@@ -262,6 +262,12 @@ int range(Node p, int lo, int hi) {
 	}
 	return LBURG_MAX;
 }
+
+void gen_dumptree(Node p) {
+	dumptree(p);
+	fprintf(stderr, "\n");
+}
+
 static void dumptree(Node p) {
 	if (p->op == VREG+P && p->syms[0]) {
 		fprint(stderr, "VREGP(%s)", p->syms[0]->name);
@@ -328,19 +334,55 @@ static void dumprule(int rulenum) {
 	if (!IR->x._isinstruction[rulenum])
 		fprint(stderr, "\n");
 }
+
+void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
+
+	assert(fmt);
+	if (*fmt == '?') {
+		fmt++;
+		assert(p->kids[0]);
+		if (p->syms[RX] == p->x.kids[0]->syms[RX])
+			while (*fmt++ != '\n')
+				;
+	}
+
+	for ( ; *fmt; fmt++) {
+		if (*fmt != '%')
+			(void)putchar(*fmt);
+		else if (*++fmt == 'F')
+			print("%d", framesize);
+		else if (*fmt >= '0' && *fmt <= '9')
+			emitasm(kids[*fmt - '0'], nts[*fmt - '0']);
+		else if (*fmt >= 'a' && *fmt < 'a' + NELEMS(p->syms))
+			fputs(p->syms[*fmt - 'a']->x.name, stdout);
+		else
+			(void)putchar(*fmt);
+	}
+}
+
 unsigned emitasm(Node p, int nt) {
 	int rulenum;
 	short *nts;
 	char *fmt;
 	Node kids[10];
 
+	void (*function)(Node);
+
 	p = reuse(p, nt);
 	rulenum = getrule(p, nt);
 	nts = IR->x._nts[rulenum];
 	fmt = IR->x._templates[rulenum];
+
+	function = IR->x._functions ? IR->x._functions[rulenum] : NULL;
+
 	assert(fmt);
 	if (IR->x._isinstruction[rulenum] && p->x.emitted)
 		print("%s", p->syms[RX]->x.name);
+
+	else if (function) {
+		function(p);
+		return 0;
+	}
 	else if (*fmt == '#')
 		(*IR->x.emit2)(p);
 	else {
