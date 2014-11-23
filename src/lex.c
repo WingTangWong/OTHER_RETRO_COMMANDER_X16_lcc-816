@@ -151,6 +151,7 @@ static void *scon(int q, void *put(int c, void *cl), void *cl);
 static int backslash(int q);
 static Symbol fcon(void);
 static Symbol icon(unsigned long, int, int);
+static Symbol ccon(const char *, int);
 static void ppnumber(char *);
 
 int gettok(void) {
@@ -357,14 +358,7 @@ int gettok(void) {
 				goto id;
 		case '\'': {
 			char *s = scon(*--cp, cput, cbuf);
-			if (s - cbuf > 2)
-				warning("excess characters in multibyte character literal ignored\n");
-			tval.type = inttype;
-			if (chartype->op == INT)
-				tval.u.c.v.i = extend(cbuf[0], chartype);
-			else
-				tval.u.c.v.i = cbuf[0]&0xFF;
-			tsym = &tval;
+			tsym = ccon(cbuf, s - cbuf - 1);
 			return ICON;
 			}
 		case '"': {
@@ -694,6 +688,43 @@ int gettok(void) {
 		}
 	}
 }
+
+static Symbol ccon(const char *s, int length) {
+	// character constants.  Handle single or multi-byte.
+	//
+	unsigned value = 0;
+	int i;
+/*
+	if (length > 1)
+		warning("excess characters in multibyte character literal ignored\n");
+*/
+
+	for (i = 0; i < length; ++i) {
+		value <<= 8;
+		value += (s[i] & 0xff);
+	}
+
+	/* sign extend signed character */
+	if (length == 1 && chartype->op == INT) {
+		value = extend(value, chartype);
+	}
+
+	tval.type = inttype;
+	tval.u.c.v.i = value;
+
+	/* bump to long or long-long as needed */
+	if (length > longlong->size) {
+		// warn about overflow?
+		tval.type = longlong;
+	} else if (length > longtype->size) {
+		tval.type = longlong;
+	} else if (length > inttype->size) {
+		tval.type = longtype;
+	}
+
+	return &tval;
+}
+
 static Symbol icon(unsigned long n, int overflow, int base) {
 	if ((*cp=='u'||*cp=='U') && (cp[1]=='l'||cp[1]=='L')
 	||  (*cp=='l'||*cp=='L') && (cp[1]=='u'||cp[1]=='U')) {
