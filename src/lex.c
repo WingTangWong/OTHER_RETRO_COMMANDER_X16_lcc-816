@@ -812,6 +812,17 @@ static void *wcput(int c, void *cl) {
 
 static void *scon(int q, void *put(int c, void *cl), void *cl) {
 	int n = 0, nbad = 0;
+	void *startcl = cl;
+	int pascal = 0;
+
+	if (limit - cp < MAXTOKEN)
+		fillbuf();
+
+	if (q == '"' && cp[1] == '\\' && cp[2] == 'p') {
+		pascal = 1;
+		cp += 2;
+		cl = put(0, cl); /* placeholder */
+	}
 
 	do {
 		cp++;
@@ -860,6 +871,16 @@ static void *scon(int q, void *put(int c, void *cl), void *cl) {
 	if (Aflag >= 2 && nbad > 0)
 		warning("%s literal contains non-portable characters\n",
 			q == '"' ? "string" : "character");
+
+	if (pascal) {
+		/* limit to 255 chars if char string. */
+		if (put == cput && n > 255) {
+			if (Aflag >= 2) 
+				warning("more than 255 characters in a pascal string literal\n");
+			n = 255;
+		}
+		put(n, startcl);
+	}
 	return cl;
 }
 int getchr(void) {
