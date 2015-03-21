@@ -1,5 +1,6 @@
 # $Id$
 BUILDDIR ?= o
+HOSTFILE ?= etc/iigs.c
 A=.a
 O=.o
 E=
