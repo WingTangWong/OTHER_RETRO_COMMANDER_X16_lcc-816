@@ -1653,18 +1653,83 @@ static char buf[BUFSIZ], *bp = buf;
 static int ppercent = 0;
 static int cost = 0;
 
+
+struct file_entry {
+	struct file_entry *next;
+	FILE *infp;
+	char buf[BUFSIZ];
+	char *bp;
+};
+
+struct file_entry *file_stack = NULL;
+
+
+void push_file(const char *name) {
+	
+	struct file_entry *e = malloc(sizeof(struct file_entry));
+	memset(e, 0, sizeof(*e));
+
+	e->infp = infp;
+	e->bp = bp;
+	memcpy(e->buf, buf, sizeof(buf));
+	file_stack = e;
+
+	infp = NULL;
+	bp = buf;
+	buf[0] = 0;
+
+
+	infp = fopen(name, "r");
+	if (!infp) {
+		yyerror("Unable to open `%s'\n", name);
+		exit(1);
+	}
+
+}
+
+
+void pop_file() {
+	struct file_entry *e = file_stack;
+	if (!e) return;
+
+	file_stack = e->next;
+
+	fclose(infp);
+
+	infp = e->infp;
+	memcpy(buf, e->buf, sizeof(buf));
+	bp = e->bp;
+
+	free(e);
+}
+
+
+
 static int get(void) {
+
+retry:
+
 	if (*bp == 0) {
+		size_t len;
 		int raw = 0;
 		bp = buf;
 		*bp = 0;
 
 		for(;;)
 		{
-			if (fgets(buf, sizeof buf, infp) == NULL)
+			if (fgets(buf, sizeof buf - 1, infp) == NULL)
 			{
 				if (raw) yywarn("unterminated %{...%}\n");
+
+				if (file_stack) { pop_file(); goto retry; }
+
 				return EOF;
+			}
+			// make sure there's a line feed at the end.
+			len = strlen(buf);
+			if (buf[len - 1] != '\n') {
+				buf[len - 1] = '\n';
+				buf[len] = 0;
 			}
 			yylineno++;
 			if (raw)
@@ -1705,6 +1770,26 @@ void yyerror(char *fmt, ...) {
 	va_end(ap);
 }
 
+
+char *read_string(const char *type)
+{
+	char *string;
+
+	char *p = strchr(bp, '"');
+	if (p == NULL) {
+		yyerror("missing \" in %s\n", type);
+		p = strchr(bp, '\n');
+		if (p == NULL)
+			p = strchr(bp, '\0');
+	}
+	assert(p);
+	string =  alloc(p - bp + 1);
+	strncpy(string, bp, p - bp);
+	string[p - bp] = 0;
+	bp = *p == '"' ? p + 1 : p;
+	return string;
+}
+
 int yylex(void) {
 	int c;
 
@@ -1713,7 +1798,7 @@ int yylex(void) {
 		bp += strspn(bp, " \t\f");
 		p = strchr(bp, '\n');
 		if (p == NULL)
-			p = strchr(bp, '\n');
+			p = strchr(bp, '\0');
 		while (p > bp && isspace(p[-1]))
 			p--;
 		yylval.string = alloc(p - bp + 1);
@@ -1723,7 +1808,9 @@ int yylex(void) {
 		cost--;
 		return COST;
 	}
+
 	while ((c = get()) != EOF) {
+
 		switch (c) {
 		case ' ': case '\f': case '\t':
 			continue;
@@ -1732,30 +1819,38 @@ int yylex(void) {
 		case ':': case '=':
 			return c;
 		}
-		if (c == '%' && *bp == '%') {
-			bp++;
-			return ppercent++ ? 0 : PPERCENT;
-		} else if (c == '%' && strncmp(bp, "term", 4) == 0
-		&& isspace(bp[4])) {
-			bp += 4;
-			return TERMINAL;
-		} else if (c == '%' && strncmp(bp, "start", 5) == 0
-		&& isspace(bp[5])) {
-			bp += 5;
-			return START;
-		} else if (c == '"') {
-			char *p = strchr(bp, '"');
-			if (p == NULL) {
-				yyerror("missing \" in assembler template\n");
-				p = strchr(bp, '\n');
-				if (p == NULL)
-					p = strchr(bp, '\0');
+
+		// handle % commands.
+		if (c == '%') {
+			if (*bp == '%') {
+				bp++;
+				return ppercent++ ? 0 : PPERCENT;
 			}
-			assert(p);
-			yylval.string = alloc(p - bp + 1);
-			strncpy(yylval.string, bp, p - bp);
-			yylval.string[p - bp] = 0;
-			bp = *p == '"' ? p + 1 : p;
+			if (strncmp(bp, "term", 4) == 0 && isspace(bp[4])) {
+				bp += 4;
+				return TERMINAL;
+			}
+			if (strncmp(bp, "start", 5) == 0 && isspace(bp[5])) {
+				bp += 5;
+				return START;
+			}
+			if (strncmp(bp, "include", 7) == 0 && isspace(bp[7])) {
+				char *name;
+
+				// %include "file"
+				bp += 7;
+				while (isspace(*bp)) bp++;
+				if (*bp++ != '"') {
+					yyerror("bad include\n");
+					exit(1);
+				}
+
+				name = read_string("include file");
+				// check for end-of-line?
+				push_file(name);
+			}
+		} else if (c == '"') {
+			yylval.string = read_string("assembler template");
 			cost++;
 			return TEMPLATE;
 		} else if (c == '{') {
