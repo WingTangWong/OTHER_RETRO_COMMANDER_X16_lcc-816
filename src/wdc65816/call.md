@@ -46,27 +46,26 @@ static void return_value(Node p, Type t) {
 	// cdecl - return via a or a/x
 	print("\tsta %s\n", rv);
 	if (size == 4)
-		("\tstx %s+2\n", rv);
+		print("\tstx %s+2\n", rv);
 }
 
 static void repair_stack(Node p, Type t) {
 	// for a cdecl call, fix the stack.
-	int arg_size = 0;
+	int arg_size = p->syms[0] ? p->syms[0]->u.c.v.i : 0;
 	int cdecl = 1;
 
-	if (p->syms[0]) arg_size = p->syms[0]->u.c.v.i;
 
 	if (!cdecl) return;
 
-	if (argsize > STACK_REPAIR_PLY_LIMIT) {
-		print("\tlda %d,s\n", argsize + 1)
+	if (arg_size > STACK_REPAIR_PLY_LIMIT) {
+		print("\tlda %d,s\n", arg_size + 1);
 		print("\ttcs\n");
 		return;
 	}
 
-	while (argsize > 0) {
+	while (arg_size > 0) {
 		print("\tply\n");
-		argsize -= 2;
+		arg_size -= 2;
 	}
 }
 
@@ -95,10 +94,10 @@ static void call_indirect(Node p, Node *kids, short *nts) {
     print("L%d:\n", lab); // label for rtl.
 
 	// if not CALLV, handle the return address
-	return_value(p);
+	return_value(p, t);
 
 	// clean up the stack.
-	repair_stack(p);
+	repair_stack(p, t);
 }
 
 /* CALLx(address) or CALLx(const) */
@@ -119,9 +118,8 @@ static void call_direct(Node p, Node *kids, short *nts) {
 %}
 
 
-XCALLV ^{
+stmt: XCALLV ^{
 	/* set up parameters for function call */
-	Node p = a;
 	Type t = NULL;
 	int arg_size = 0;
 	int return_size = 0;
@@ -137,7 +135,7 @@ XCALLV ^{
 	
 
 	if (p->syms[0]) arg_size = p->syms[0]->u.c.v.i;
-	if (p->syms[1]) type = p->syms[1]->type;
+	if (p->syms[1]) t = p->syms[1]->type;
 	return_size = opsize(p->op);
 
 	if (pascal || return_size > 4)
@@ -150,7 +148,7 @@ XCALLV ^{
 	}
 
 	if (cdecl && arg_size > STACK_REPAIR_PLY_LIMIT) {
-		print("\t; save stack\n" "\ttsx\n" "\tphx\n")
+		print("\t; save stack\n" "\ttsx\n" "\tphx\n");
 	}
 }
 
