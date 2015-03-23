@@ -279,7 +279,7 @@ static char *tostring(long double d) {
 		else
 			sprintf(buf, "0.0");
 	} else
-		sprintf(buf, "%e", d);
+		sprintf(buf, "%Le", d);
 	return buf;
 }
 
