@@ -211,8 +211,10 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				//printtree(tp, 1);
 
 				// create entry before the call.
-				xcall = newnode(XCALL+V, NULL, NULL, NULL);
-				list(xcall);
+				if (IR->wants_xcall) {
+					xcall = newnode(XCALL+V, NULL, NULL, NULL);
+					list(xcall);
+				}
 
 				if (tp->op == CALL+B && !IR->wants_callb) {
 					Tree arg0 = tree(ARG+P, tp->kids[1]->type,
@@ -240,6 +242,8 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				firstarg = save;
 
 				if (xcall) {
+					// not sure if this is needed. It can scan
+					// forward to find the CALL and type.
 					//xcall->op = XCALL + opkind(p->op);
 					NEW0(xcall->syms[0], FUNC);
 					xcall->syms[0]->type = p->syms[0]->type;
