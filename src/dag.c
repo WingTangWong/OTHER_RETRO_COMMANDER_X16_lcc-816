@@ -203,48 +203,67 @@ Node listnodes(Tree tp, int tlab, int flab) {
 		      l = listnodes(tp->kids[0], 0, 0);
 		      list(newnode(JUMP+V, l, NULL, NULL));
 		      reset(); } break;
-	case CALL:  { Tree save = firstarg;
-		      firstarg = NULL;
-		      assert(tlab == 0 && flab == 0);
-		      if (tp->op == CALL+B && !IR->wants_callb) {
-		      	Tree arg0 = tree(ARG+P, tp->kids[1]->type,
-				tp->kids[1], NULL);
-			if (IR->left_to_right)
-				firstarg = arg0;
-			l = listnodes(tp->kids[0], 0, 0);
-			if (!IR->left_to_right || firstarg) {
+	case CALL:  {
+				Node xcall = NULL;
+				Tree save = firstarg;
 				firstarg = NULL;
-				listnodes(arg0, 0, 0);
-			}
-		      	p = newnode(CALL+V, l, NULL, NULL);
-		      } else {
-		      	l = listnodes(tp->kids[0], 0, 0);
-		      	r = listnodes(tp->kids[1], 0, 0);
-		      	p = newnode(tp->op == CALL+B ? tp->op : op, l, r, NULL);
-		      }
-		      NEW0(p->syms[0], FUNC);
-		      assert(isptr(tp->kids[0]->type));
-		      assert(isfunc(tp->kids[0]->type->type));
-		      p->syms[0]->type = tp->kids[0]->type->type;
-		      list(p);
-		      reset();
-		      cfunc->u.f.ncalls++;
-		      firstarg = save;
- } break;
+				assert(tlab == 0 && flab == 0);
+				//printtree(tp, 1);
+
+				// create entry before the call.
+				xcall = newnode(XCALL+V, NULL, NULL, NULL);
+				list(xcall);
+
+				if (tp->op == CALL+B && !IR->wants_callb) {
+					Tree arg0 = tree(ARG+P, tp->kids[1]->type,
+						tp->kids[1], NULL);
+					if (IR->left_to_right)
+						firstarg = arg0;
+					l = listnodes(tp->kids[0], 0, 0);
+					if (!IR->left_to_right || firstarg) {
+						firstarg = NULL;
+						listnodes(arg0, 0, 0);
+					}
+					p = newnode(CALL+V, l, NULL, NULL);
+				} else {
+					l = listnodes(tp->kids[0], 0, 0);
+					r = listnodes(tp->kids[1], 0, 0);
+					p = newnode(tp->op == CALL+B ? tp->op : op, l, r, NULL);
+				}
+				NEW0(p->syms[0], FUNC);
+				assert(isptr(tp->kids[0]->type));
+				assert(isfunc(tp->kids[0]->type->type));
+				p->syms[0]->type = tp->kids[0]->type->type;
+				list(p);
+				reset();
+				cfunc->u.f.ncalls++;
+				firstarg = save;
+
+				if (xcall) {
+					//xcall->op = XCALL + opkind(p->op);
+					NEW0(xcall->syms[0], FUNC);
+					xcall->syms[0]->type = p->syms[0]->type;
+					//xcall->kids[0] = p;
+					//p->count++;
+				}
+ 			} break;
+
 	case ARG:   { assert(tlab == 0 && flab == 0);
-		      if (IR->left_to_right)
-		      	listnodes(tp->kids[1], 0, 0);
-		      if (firstarg) {
-		      	Tree arg = firstarg;
-		      	firstarg = NULL;
-		      	listnodes(arg, 0, 0);
-		      }
-		      l = listnodes(tp->kids[0], 0, 0);
-		      list(newnode(tp->op == ARG+B ? tp->op : op, l, NULL, NULL));
-		      forest->syms[0] = intconst(tp->type->size);
-		      forest->syms[1] = intconst(tp->type->align);
-		      if (!IR->left_to_right)
-		      	listnodes(tp->kids[1], 0, 0); } break;
+				if (IR->left_to_right)
+					listnodes(tp->kids[1], 0, 0);
+				if (firstarg) {
+					Tree arg = firstarg;
+					firstarg = NULL;
+					listnodes(arg, 0, 0);
+				}
+				l = listnodes(tp->kids[0], 0, 0);
+				list(newnode(tp->op == ARG+B ? tp->op : op, l, NULL, NULL));
+				forest->syms[0] = intconst(tp->type->size);
+				forest->syms[1] = intconst(tp->type->align);
+				if (!IR->left_to_right)
+					listnodes(tp->kids[1], 0, 0); 
+			} break;
+
 	case EQ:  case NE: case GT: case GE: case LE:
 	case LT:    { assert(tp->u.sym == 0);
 		      assert(errcnt || tlab || flab);

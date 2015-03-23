@@ -124,6 +124,7 @@ static void docall(Node p) {
 	p->syms[0] = intconst(argoffset);
 	if (argoffset > maxargoffset)
 		maxargoffset = argoffset;
+
 	argoffset = 0;
 }
 void blkcopy(int dreg, int doff, int sreg, int soff, int size, int tmp[]) {
@@ -305,6 +306,8 @@ static void dumptree(Node p) {
 		dumptree(p->kids[0]);
 		fprint(stderr, ", ");
 		dumptree(p->kids[1]);
+		break;
+	case XCALL:
 		break;
 	default: assert(0);
 	}

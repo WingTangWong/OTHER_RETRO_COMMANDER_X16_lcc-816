@@ -313,6 +313,8 @@ static Node I(gen)(Node p) {
 		case INDIR:
 			assert(IR->wants_dag && p->count > 0);
 			break;
+		case XCALL:
+			break;
 		default:
 			assert(0);
 		}

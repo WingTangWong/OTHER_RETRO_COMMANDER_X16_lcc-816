@@ -113,6 +113,8 @@ static void dumptree(Node p) {
 		dumptree(p->kids[0]);
 		print("%s\n", opname(p->op));
 		return;
+	case XCALL:
+		return;
 	case CALL:
 		assert(p->kids[0]);
 		assert(!p->kids[1]);
