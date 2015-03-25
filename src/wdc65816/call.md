@@ -219,6 +219,23 @@ reg: CALLU2(const) ^{
 	call_direct(p, kids, nts);
 } 1
 
+reg: CALLU4(address) ^{
+	call_direct(p, kids, nts);
+} 1
+
+reg: CALLU4(const) ^{
+	call_direct(p, kids, nts);
+} 1
+
+reg: CALLI4(address) ^{
+	call_direct(p, kids, nts);
+} 1
+
+reg: CALLI4(const) ^{
+	call_direct(p, kids, nts);
+} 1
+
+
 
 reg: CALLP4(address) ^{
 	call_direct(p, kids, nts);
