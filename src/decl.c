@@ -403,7 +403,7 @@ static unsigned expecting(int tok) {
 	return 0;
 }
 
-static unsigned funcattr_string(const char **dest) {
+static unsigned funcattr_string(char **dest) {
 
 	// eg, segment("segname")
 	char *cp;
@@ -438,7 +438,7 @@ static unsigned funcattr_inline(FunctionAttr *fa) {
 
 	return expecting(')');
 }
-static void funcattr(FunctionAttr *fa, sentinel) {
+static void funcattr(FunctionAttr *fa, int sentinel) {
 
 	static char stop[] = { ',', 0 };
 
