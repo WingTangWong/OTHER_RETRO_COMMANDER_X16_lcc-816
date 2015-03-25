@@ -324,6 +324,23 @@ enum {
 	RIGHT=42<<4,
 	FIELD=43<<4
 };
+
+typedef struct functionattr FunctionAttr;
+struct functionattr {
+	unsigned pascal:1;
+	unsigned stdcall:1;
+	unsigned cdecl:1;
+	unsigned noreturn:1;
+	unsigned near:1;
+	unsigned databank:1;
+
+	unsigned function_vector;
+	unsigned registerX;
+	unsigned registerY;
+	unsigned registerA;
+	char *segment;
+};
+
 struct type {
 	int op;
 	Type type;
@@ -334,6 +351,7 @@ struct type {
 		struct {
 			unsigned oldstyle:1;
 			Type *proto;
+			FunctionAttr *attr;
 		} f;
 	} u;
 	Xtype x;
@@ -516,6 +534,7 @@ extern int findcount(char *, int, int);
 
 extern Tree constexpr(int);
 extern int intexpr(int, int);
+extern long longexpr(int, long);
 extern Tree simplify(int, Type, Tree, Tree);
 extern int ispow2(unsigned long u);
 

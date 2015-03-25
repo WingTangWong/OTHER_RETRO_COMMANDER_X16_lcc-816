@@ -6,31 +6,34 @@
 #define STACK_REPAIR_PLY_LIMIT 4
 
 /* returns 1 if this is a tool dispatch */
-static unsigned tool_dispatch(Node p, Type type) {
-	Type t = NULL;
-	unsigned x = 0;
-	unsigned vector = 0;
+static unsigned tool_dispatch(Node p, Type t, FunctionAttr *attr) {
 
+	
+	if (attr && attr->function_vector) {
 
-	if (x) {
-		print("\tldx #$%04x\n", x);
-	}
-	if (vector) {
-		print("\tjsl #$%06x\n", vector);
-		print("\tsta >_toolErr");
+		if (attr->registerX) {
+			print("\tldx #$%x\n", attr->registerX);
+		}
+
+		print("\tjsl $%x\n", attr->function_vector);
+		print("\tsta >_toolErr\n");
 
 		return 1;
 	}
 	return 0;
 }
 
-static void return_value(Node p, Type t) {
+static void return_value(Node p, Type t, FunctionAttr *attr) {
 
 	// see emitstring()
-	const char *rv = p->syms['c' - 'a']->x.name;
+	const char *rv;
 	unsigned pascal = 0;
 
 	if (p->op == CALL+V) return;
+
+	if (attr && attr->pascal) pascal = 1;
+
+	rv = p->syms['c' - 'a']->x.name;
 
 	unsigned size = opsize(p->op);
 
@@ -49,13 +52,15 @@ static void return_value(Node p, Type t) {
 		print("\tstx %s+2\n", rv);
 }
 
-static void repair_stack(Node p, Type t) {
+static void repair_stack(Node p, Type t, FunctionAttr *attr) {
 	// for a cdecl call, fix the stack.
 	int arg_size = p->syms[0] ? p->syms[0]->u.c.v.i : 0;
-	int cdecl = 1;
 
+	if (attr) {
+		if (attr->pascal) return;
+		//stdcall  - caller cleans up, unless variadic.
+	}
 
-	if (!cdecl) return;
 
 	if (arg_size > STACK_REPAIR_PLY_LIMIT) {
 		print("\tlda %d,s\n", arg_size + 1);
@@ -94,10 +99,10 @@ static void call_indirect(Node p, Node *kids, short *nts) {
     print("L%d:\n", lab); // label for rtl.
 
 	// if not CALLV, handle the return address
-	return_value(p, t);
+	return_value(p, t, NULL);
 
 	// clean up the stack.
-	repair_stack(p, t);
+	repair_stack(p, t, NULL);
 }
 
 /* CALLx(address) or CALLx(const) */
@@ -105,14 +110,17 @@ static void call_direct(Node p, Node *kids, short *nts) {
 	
 	Type t = p->syms[1] ? p->syms[1]->type : NULL;
 
-	if (!tool_dispatch(p, t))
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
+
+
+	if (!tool_dispatch(p, t, attr))
 		EMIT("\tjsl %0\n");
 
 	// if not CALLV, handle the return address
-	return_value(p, t);
+	return_value(p, t, attr);
 
 	// clean up the stack.
-	repair_stack(p, t);
+	repair_stack(p, t, attr);
 }
 
 %}
@@ -121,22 +129,53 @@ static void call_direct(Node p, Node *kids, short *nts) {
 stmt: XCALLV ^{
 	/* set up parameters for function call */
 	Type t = NULL;
+	FunctionAttr *attr = NULL;
+
 	int arg_size = 0;
 	int return_size = 0;
 
 	unsigned pascal = 0;
+	unsigned stdcall = 0;
 	unsigned cdecl = 1;
+	unsigned xcall = 0;
+
 
 	// scan forward to find the call.
-	while (p && generic(p->op) != CALL)
+	//p = p->x.next; // skip current node since it's an xcall.
+	while(p) {
+		if (generic(p->op) == XCALL)
+			xcall++;
+
+		if (generic(p->op) == CALL)
+			if (--xcall == 0) break;
+		
 		p = p->x.next;
+	}
+
 
 	if (!p) return; //!
-	
 
 	if (p->syms[0]) arg_size = p->syms[0]->u.c.v.i;
 	if (p->syms[1]) t = p->syms[1]->type;
+	if (t && t->u.f.attr) attr = t->u.f.attr;
+
 	return_size = opsize(p->op);
+
+	if (attr && attr->pascal) {
+		pascal = 1;
+		stdcall = 0;
+		cdecl = 0;
+	}
+
+	if (attr && attr->stdcall) {
+		stdcall = 1;
+		pascal = 0;
+		cdecl = 0;
+		if (variadic(t) || !t->u.f.proto) {
+			stdcall = 0;
+			cdecl = 1;
+		}
+	}
 
 	if (pascal || return_size > 4)
 	{
@@ -181,6 +220,15 @@ reg: CALLU2(const) ^{
 } 1
 
 
+reg: CALLP4(address) ^{
+	call_direct(p, kids, nts);
+} 1
+
+reg: CALLP4(const) ^{
+	call_direct(p, kids, nts);
+} 1
+
+
 reg: CALLV(reg) ^{
 	call_indirect(p, kids, nts);
 } 10
@@ -193,3 +241,6 @@ reg: CALLU2(reg) ^{
 	call_indirect(p, kids, nts);
 } 10
 
+reg: CALLP4(reg) ^{
+	call_indirect(p, kids, nts);
+} 10

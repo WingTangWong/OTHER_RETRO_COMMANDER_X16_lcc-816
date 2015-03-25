@@ -49,3 +49,50 @@ reg: LOADU1(reg)  {
     sta %c
     rep #$20
 }  move(a) + 3
+
+
+#pragma mark - P4 / I4 / U4
+reg: LOADP4(reg)  {
+    lda %0
+    sta %c
+    lda %0+2
+    sta %c+2
+}  move(a) + 4
+
+
+reg: LOADP4(const)  {
+    lda #%0
+    sta %c
+    lda #^%0
+    sta %c+2
+} 4
+
+
+reg: LOADI4(reg)  {
+    lda %0
+    sta %c
+    lda %0+2
+    sta %c+2
+}  move(a) + 4
+
+reg: LOADI4(const)  {
+    lda #%0
+    sta %c
+    lda #^%0
+    sta %c+2
+} 4
+
+
+reg: LOADU4(reg)  {
+    lda %0
+    sta %c
+    lda %0+2
+    sta %c+2
+}  move(a) + 4
+
+reg: LOADU4(const)  {
+    lda #%0
+    sta %c
+    lda #^%0
+    sta %c+2
+} 4

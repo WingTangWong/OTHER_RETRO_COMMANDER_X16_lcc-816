@@ -302,6 +302,7 @@ static Type dclr(Type basety, char **id, Symbol **params, int abstract) {
 		case FUNCTION:
 			basety = func(basety, ty->u.f.proto,
 				ty->u.f.oldstyle);
+			basety->u.f.attr = ty->u.f.attr; // kws - temp.
 			break;
 		case ARRAY:
 			basety = array(basety, ty->size, 0);
@@ -390,6 +391,234 @@ static Type dclr1(char **id, Symbol **params, int abstract) {
 		}
 	return ty;
 }
+
+#define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
+
+static unsigned expecting(int tok) {
+	if (t == tok) {
+		t = gettok();
+		return 1;
+	}
+	expect(tok);
+	return 0;
+}
+
+static unsigned funcattr_string(const char **dest) {
+
+	// eg, segment("segname")
+	char *cp;
+
+	if (!expecting('(')) return 0;
+
+	if (t != SCON) {
+		expect(SCON);
+		return 0;
+	}
+
+	cp = tsym->u.c.v.p;
+	*dest =  stringn(cp, strlen(cp));
+
+	t = gettok();
+	return expecting(')');
+}
+
+
+static unsigned funcattr_inline(FunctionAttr *fa) {
+	// inline(address) -or- inline(address,x)
+	if (!expecting('(')) return 0;
+
+	// hacky! need a longintexpr.
+	fa->function_vector = longexpr(0, 0);
+
+	if (t == ',') {
+		t = gettok();
+
+		fa->registerX = intexpr(0, 0);
+	}
+
+	return expecting(')');
+}
+static void funcattr(FunctionAttr *fa, sentinel) {
+
+	static char stop[] = { ',', 0 };
+
+	static int init = 0;
+	static char *id_noreturn = NULL;
+	static char *id_pascal = NULL;
+	static char *id_cdecl = NULL;
+	static char *id_stdcall = NULL;
+	static char *id_near = NULL;
+	static char *id_databank = NULL;
+	static char *id_inline = NULL;
+
+	//static char *id_function_vector = NULL;
+	static char *id_segment = NULL;
+
+	if (!init) {
+		id_pascal = STRINGN("pascal");
+		id_noreturn = STRINGN("noreturn");
+		id_cdecl = STRINGN("cdecl");
+		id_stdcall = STRINGN("stdcall");
+		id_near = STRINGN("near");
+		id_databank = STRINGN("databank");
+
+		id_inline = STRINGN("inline");
+		id_segment = STRINGN("segment");
+
+		init = 1;
+	}
+
+	if (t == ID) {
+
+		if (token == id_noreturn) {
+			fa->noreturn = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_pascal) {
+			fa->pascal = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_cdecl) {
+			fa->cdecl = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_stdcall) {
+			fa->stdcall = 1;
+			t = gettok();
+			return;
+		}
+
+		if (token == id_databank) {
+			fa->databank = 1;
+			t = gettok();
+			return;
+		}
+
+		if (token == id_inline) {
+			t = gettok();
+			if (!funcattr_inline(fa))
+				skipto(sentinel, stop);
+
+			return;
+		}
+
+		if (token == id_segment) {
+			t = gettok();
+			if (!funcattr_string(&fa->segment))
+				skipto(sentinel, stop);
+
+			return;
+		}
+
+	}
+
+	/* unknown .. pull tokens until we get sentinel or ,
+	 * `,'  (and only `,') has a kind of `,', so we
+	 * can use skipto.
+	 */
+
+	warning("Unrecognized function attribute\n");
+	skipto(sentinel, stop);
+}
+
+static FunctionAttr *funcattrlist(int sentinel) {
+
+	FunctionAttr *fa;
+
+	NEW0(fa, 0);
+
+	for(;;) {
+		if (t == sentinel) break;
+
+		funcattr(fa, sentinel);
+
+		if (t != ',') break;
+		t = gettok();
+	}
+
+	// checkfuncattr will verify the sentinel character.
+
+	return fa;
+}
+
+static void checkfuncattr(Type fty) {
+	/* parse function attributes
+	 * __attribute__ (( ... )) [gnu/ibm style]
+	 * -- or -- 
+	 * [[...]] [c++11 style]
+	 */ 
+
+	static char *attr = NULL;
+	static char stop[] = { CHAR, STATIC, IF, ')', 0 };
+
+
+	if (!attr) attr = STRINGN("__attribute__");
+
+	if (t == ID && token == attr) {
+
+		t = gettok();
+		if (t != '(') {
+			expect('(');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != '(') {
+			expect('(');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+		fty->u.f.attr = funcattrlist(')');
+
+		if (t != ')') {
+			expect(')');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != ')') {
+			expect(')');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+	} else if (t == '[') {
+
+		t = gettok();
+		if (t != '[') {
+			expect('[');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+		fty->u.f.attr = funcattrlist(']');
+
+		if (t != ']') {
+			expect(']');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != ']') {
+			expect(']');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+	}
+}
+
+
 static Symbol *parameters(Type fty) {
 	List list = NULL;
 	Symbol *params;
@@ -465,7 +694,10 @@ static Symbol *parameters(Type fty) {
 		skipto('{', stop);
 	}
 	if (t == ')')
+	{
 		t = gettok();
+		checkfuncattr(fty);
+	}
 	return params;
 }
 static void exitparams(Symbol params[]) {

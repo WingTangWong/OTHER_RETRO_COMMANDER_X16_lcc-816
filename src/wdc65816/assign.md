@@ -74,6 +74,12 @@ stmt: ASGNI4(vregp, reg) {
     sta %0+2
 } 4
 
+stmt: ASGNP4(vregp, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
 
 
 

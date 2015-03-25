@@ -13,6 +13,7 @@ static struct dag {
 } *buckets[16];
 int nodecount;
 static Tree firstarg;
+static int left_to_right = 0;
 int assignargs = 1;
 int prunetemps = -1;
 static Node *tail;
@@ -206,9 +207,15 @@ Node listnodes(Tree tp, int tlab, int flab) {
 	case CALL:  {
 				Node xcall = NULL;
 				Tree save = firstarg;
+				int save_left_to_right = left_to_right;
+
 				firstarg = NULL;
 				assert(tlab == 0 && flab == 0);
 				//printtree(tp, 1);
+
+				left_to_right = IR->left_to_right;
+				if (IR->x.left_to_right)
+					left_to_right = IR->x.left_to_right(tp->kids[0]->type->type);
 
 				// create entry before the call.
 				if (IR->wants_xcall) {
@@ -219,10 +226,10 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				if (tp->op == CALL+B && !IR->wants_callb) {
 					Tree arg0 = tree(ARG+P, tp->kids[1]->type,
 						tp->kids[1], NULL);
-					if (IR->left_to_right)
+					if (left_to_right)
 						firstarg = arg0;
 					l = listnodes(tp->kids[0], 0, 0);
-					if (!IR->left_to_right || firstarg) {
+					if (!left_to_right || firstarg) {
 						firstarg = NULL;
 						listnodes(arg0, 0, 0);
 					}
@@ -240,20 +247,21 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				reset();
 				cfunc->u.f.ncalls++;
 				firstarg = save;
+				left_to_right = save_left_to_right;
 
 				if (xcall) {
+					#if 0
 					// not sure if this is needed. It can scan
 					// forward to find the CALL and type.
 					//xcall->op = XCALL + opkind(p->op);
 					NEW0(xcall->syms[0], FUNC);
 					xcall->syms[0]->type = p->syms[0]->type;
-					//xcall->kids[0] = p;
-					//p->count++;
+					#endif
 				}
  			} break;
 
 	case ARG:   { assert(tlab == 0 && flab == 0);
-				if (IR->left_to_right)
+				if (left_to_right)
 					listnodes(tp->kids[1], 0, 0);
 				if (firstarg) {
 					Tree arg = firstarg;
@@ -264,7 +272,7 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				list(newnode(tp->op == ARG+B ? tp->op : op, l, NULL, NULL));
 				forest->syms[0] = intconst(tp->type->size);
 				forest->syms[1] = intconst(tp->type->align);
-				if (!IR->left_to_right)
+				if (!left_to_right)
 					listnodes(tp->kids[1], 0, 0); 
 			} break;
 

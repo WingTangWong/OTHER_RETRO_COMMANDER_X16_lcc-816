@@ -204,6 +204,20 @@ int intexpr(int tok, int n) {
 	needconst--;
 	return n;
 }
+
+long longexpr(int tok, long n) {
+	Tree p = constexpr(tok);
+
+	needconst++;
+	if (p->op == CNST+I || p->op == CNST+U)
+		n = cast(p, longtype)->u.v.i;
+	else
+		error("integer expression must be constant\n");
+	needconst--;
+	return n;
+}
+
+
 Tree simplify(int op, Type ty, Tree l, Tree r) {
 	int n;
 	Tree p;
