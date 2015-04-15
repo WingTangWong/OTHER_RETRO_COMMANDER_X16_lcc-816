@@ -422,6 +422,7 @@ void emit(Node p) {
 }
 static int moveself(Node p) {
 	return p->x.copy
+	&& p->x.kids[0] // fix for 65816/dp registers
 	&& p->syms[RX]->x.name == p->x.kids[0]->syms[RX]->x.name;
 }
 int move(Node p) {
