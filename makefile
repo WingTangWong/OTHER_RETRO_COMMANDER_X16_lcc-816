@@ -122,7 +122,12 @@ $Bmips.c:	$Blburg$E src/mips.md;     $Blburg src/mips.md     $@
 $Bsparc.c:	$Blburg$E src/sparc.md;    $Blburg src/sparc.md    $@
 $Bx86.c:	$Blburg$E src/x86.md;      $Blburg src/x86.md      $@
 $Bx86linux.c:	$Blburg$E src/x86linux.md; $Blburg src/x86linux.md $@
-$Bwdc65816.c:	$Blburg$E src/wdc65816.md; $Blburg src/wdc65816.md $@
+
+DEP816=add-sub.md arg.md assign.md bitops.md builtin.md call.md\
+const.md indir.md load.md multiply.md shift.md
+
+$Bwdc65816.c:	$Blburg$E src/wdc65816.md $(DEP816:%=src/wdc65816/%)
+	$Blburg src/wdc65816.md $@
 
 $Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
 $Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
