@@ -51,6 +51,10 @@ extern unsigned freemask[], usedmask[];
 extern int      offset, maxoffset;
 extern int      swap;
 extern unsigned tmask[], vmask[];
+
+/* iigs - was 2 */
+#define REGISTER_SETS 4
+
 typedef struct {
 	unsigned listed:1;
 	unsigned registered:1;
@@ -85,7 +89,7 @@ typedef struct {
 enum { RX=2 };
 typedef struct {
 	int offset;
-	unsigned freemask[2];
+	unsigned freemask[REGISTER_SETS];
 } Env;
 
 #define LBURG_MAX SHRT_MAX

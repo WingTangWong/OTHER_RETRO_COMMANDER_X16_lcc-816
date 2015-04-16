@@ -72,10 +72,11 @@ static char NeedsReg[] = {
 };
 Node head;
 
-unsigned freemask[2];
-unsigned usedmask[2];
-unsigned tmask[2];
-unsigned vmask[2];
+
+unsigned freemask[REGISTER_SETS];
+unsigned usedmask[REGISTER_SETS];
+unsigned tmask[REGISTER_SETS];
+unsigned vmask[REGISTER_SETS];
 Symbol mkreg(char *fmt, int n, int mask, int set) {
 	Symbol p;
 
@@ -102,16 +103,26 @@ void mkauto(Symbol p) {
 	p->x.name = stringd(-offset);
 }
 void blockbeg(Env *e) {
+	unsigned i;
 	e->offset = offset;
-	e->freemask[IREG] = freemask[IREG];
-	e->freemask[FREG] = freemask[FREG];
+
+	for (i = 0; i < REGISTER_SETS; ++i)
+		e->freemask[i] = freemask[i];
+
+	//e->freemask[IREG] = freemask[IREG];
+	//e->freemask[FREG] = freemask[FREG];
 }
 void blockend(Env *e) {
+	unsigned i;
 	if (offset > maxoffset)
 		maxoffset = offset;
 	offset = e->offset;
-	freemask[IREG] = e->freemask[IREG];
-	freemask[FREG] = e->freemask[FREG];
+
+	for (i = 0; i < REGISTER_SETS; ++i)
+		freemask[i] = e->freemask[i];
+
+	//freemask[IREG] = e->freemask[IREG];
+	//freemask[FREG] = e->freemask[FREG];
 }
 int mkactual(int align, int size) {
 	int n = roundup(argoffset, align);
