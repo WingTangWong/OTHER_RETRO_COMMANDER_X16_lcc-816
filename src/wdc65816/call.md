@@ -3,7 +3,8 @@
 %{
 
 #define EMIT2(x) emitstring(x, p, NULL, NULL)
-#define STACK_REPAIR_PLY_LIMIT 4
+#define STACK_REPAIR_PLY_LIMIT 6
+#define STACK_REPAIR_ADC_MIN 254
 
 /* returns 1 if this is a tool dispatch */
 static unsigned tool_dispatch(Node p, Type t, FunctionAttr *attr) {
@@ -61,6 +62,11 @@ static void repair_stack(Node p, Type t, FunctionAttr *attr) {
 		//stdcall  - caller cleans up, unless variadic.
 	}
 
+	// if > 254 args, need to adjust the stack w/ math.
+	if (arg_size >= STACK_REPAIR_ADC_MIN) {
+		print( "\ttsc\n" "\tsec\n" "\tsbc #%d\n" "\ttcs\n", arg_size);
+		return;
+	}
 
 	if (arg_size > STACK_REPAIR_PLY_LIMIT) {
 		print("\tlda %d,s\n", arg_size + 1);
@@ -80,8 +86,11 @@ static void call_indirect(Node p, Node *kids, short *nts) {
 	// &MMStartUp doesn't make much sense
 
 	Type t = p->syms[1] ? p->syms[1]->type : NULL;
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
 
 
+
+#if 0
     int lab = genlabel(1);
 
     // generate an rtl address
@@ -97,6 +106,19 @@ static void call_indirect(Node p, Node *kids, short *nts) {
     EMIT("\tsta 1,s\n");
     EMIT("\trtl\n");
     print("L%d:\n", lab); // label for rtl.
+
+#endif
+	
+	if (attr && attr->near) {
+		EMIT("\tldx %0\n");
+		EMIT("\tjsr (0,x)");
+	}
+	else {
+		// a couple cycles slower, but won't interfere w/ optimizer.
+		EMIT("\tldx %0+2\n");
+		EMIT("\tlda %0\n");
+		EMIT("\tjsl __builtin_jsl_ax");
+	}
 
 	// if not CALLV, handle the return address
 	return_value(p, t, NULL);
@@ -186,7 +208,7 @@ stmt: XCALLV ^{
 		}
 	}
 
-	if (cdecl && arg_size > STACK_REPAIR_PLY_LIMIT) {
+	if (cdecl && arg_size > STACK_REPAIR_PLY_LIMIT && arg_size < STACK_REPAIR_ADC_MIN) {
 		print("\t; save stack\n" "\ttsx\n" "\tphx\n");
 	}
 }
