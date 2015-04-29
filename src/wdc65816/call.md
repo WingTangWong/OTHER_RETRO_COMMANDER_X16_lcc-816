@@ -111,13 +111,13 @@ static void call_indirect(Node p, Node *kids, short *nts) {
 	
 	if (attr && attr->near) {
 		EMIT("\tldx %0\n");
-		EMIT("\tjsr (0,x)");
+		EMIT("\tjsr (0,x)\n");
 	}
 	else {
 		// a couple cycles slower, but won't interfere w/ optimizer.
 		EMIT("\tldx %0+2\n");
 		EMIT("\tlda %0\n");
-		EMIT("\tjsl __builtin_jsl_ax");
+		EMIT("\tjsl __builtin_jsl_ax\n");
 	}
 
 	// if not CALLV, handle the return address
