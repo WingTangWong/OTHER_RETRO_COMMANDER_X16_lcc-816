@@ -14,5 +14,9 @@ unsigned long __builtin_bswap32(unsigned long);
 unsigned __builtin_bcd_add(unsigned, unsigned);
 unsigned __builtin_bcd_sub(unsigned, unsigned);
 
+
+unsigned __builtin_ror(unsigned);
+unsigned __builtin_rol(unsigned);
+
 #endif
 

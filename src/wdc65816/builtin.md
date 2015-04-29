@@ -15,6 +15,9 @@ static char *iigs_stp;
 static char *iigs_wai;
 static char *iigs_bcd_add;
 static char *iigs_bcd_sub;
+static char *iigs_rol;
+static char *iigs_ror;
+
 
 #define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
 
@@ -31,6 +34,9 @@ static void init_builtins(void) {
 	iigs_wai = STRINGN("__builtin_wai");
 	iigs_bcd_add = STRINGN("__builtin_bcd_add");
 	iigs_bcd_sub = STRINGN("__builtin_bcd_sub");
+
+	iigs_rol = STRINGN("__builtin_rol");
+	iigs_ror = STRINGN("__builtin_ror");
 }
 
 static int is_builtin(Node p, const char *fx) {
@@ -155,4 +161,23 @@ reg: CALLU2(address) {
 	sta %c
 } is_builtin(a, iigs_bcd_add)
 
+# unsigned __builtin_rol(unsigned)
+reg: CALLU2(address) {
+	; %0
+	pla
+	cmp #$8000
+	rol
+	sta %c
+} is_builtin(a, iigs_rol)
 
+# unsigned __builtin_ror(unsigned)
+reg: CALLU2(address) {
+	; %0
+	pla
+	lsr
+	sta %c
+	lda #0
+	ror 
+	tsb %c
+} is_builtin(a, iigs_ror)
+# ora.cs #$8000 ?
