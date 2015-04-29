@@ -497,6 +497,13 @@ static void funcattr(FunctionAttr *fa, int sentinel) {
 			return;
 		}
 
+		// rts/rtl/rti?
+		if (token == id_near) {
+			fa->near = 1;
+			t = gettok();
+			return;
+		}
+
 		if (token == id_inline) {
 			t = gettok();
 			if (!funcattr_inline(fa))
