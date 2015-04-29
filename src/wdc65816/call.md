@@ -135,9 +135,11 @@ static void call_direct(Node p, Node *kids, short *nts) {
 	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
 
 
-	if (!tool_dispatch(p, t, attr))
-		EMIT("\tjsl %0\n");
+	if (!tool_dispatch(p, t, attr)) {
 
+		if (attr && attr->near) EMIT("\tjsr %0\n");
+		else EMIT("\tjsl %0\n");
+	}
 	// if not CALLV, handle the return address
 	return_value(p, t, attr);
 
