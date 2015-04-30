@@ -185,6 +185,8 @@ stmt: XCALLV ^{
 
 	return_size = opsize(p->op);
 
+	// struct size = p->syms[0]->u.c.v.i
+
 	if (attr && attr->pascal) {
 		pascal = 1;
 		stdcall = 0;

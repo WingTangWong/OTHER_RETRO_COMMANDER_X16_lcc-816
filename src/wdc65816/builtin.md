@@ -101,6 +101,40 @@ reg: CALLI2(address) {
 	sta %c
 } is_builtin(a, iigs_va_arg)
 
+
+reg: CALLI4(address) {
+	; %0
+	plx
+	plx
+	;lda >$000000-2,x
+	lda >$000000,x
+	sta %c
+	lda >$000002,x
+	sta %c+2
+} is_builtin(a, iigs_va_arg)
+
+reg: CALLU4(address) {
+	; %0
+	plx
+	plx
+	;lda >$000000-2,x
+	lda >$000000,x
+	sta %c
+	lda >$000002,x
+	sta %c+2
+} is_builtin(a, iigs_va_arg)
+
+reg: CALLP4(address) {
+	; %0
+	plx
+	plx
+	;lda >$000000-2,x
+	lda >$000000,x
+	sta %c
+	lda >$000002,x
+	sta %c+2
+} is_builtin(a, iigs_va_arg)
+
 # void __builtin_trap(void);
 stmt: CALLV(address) {
 	; %0
