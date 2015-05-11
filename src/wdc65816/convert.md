@@ -9,19 +9,21 @@ reg: CVII2(reg) {
     ora #$ff00
 @ok
     sta %c
-} 5
+} 6
 
-reg: CVIU2(INDIRU1(vregp)) {
+# INDIRU1(vregp)
+reg: CVIU2(reg) {
     lda %0
     and #$00ff
     sta %c
-} 2
+} 3
 
-reg: CVUI2(INDIRU1(vregp)) {
+# INDIRU1(vregp)
+reg: CVUI2(reg) {
 	lda %0
     and #$00ff
     sta %c
-} 2
+} 3
 
 #pragma mark - to long
 
@@ -29,9 +31,10 @@ reg: CVUI2(INDIRU1(vregp)) {
 reg: CVII4(reg) {
 	ldx #0
 	lda %0
+	cmp #0
 	bpl @ok
 	dex
 @ok
 	sta %c
 	stx %c+2
-} 6
+} 7
