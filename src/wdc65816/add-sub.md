@@ -113,3 +113,27 @@ reg: SUBI2(rc, const_1) {
     sta %c
 } 3
 
+
+
+# pointer math.
+
+
+reg: ADDP4(reg, const) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+reg: ADDP4(reg, reg) {
+    lda %0
+    clc
+    adc %1
+    sta %c
+    lda %0+2
+    adc %1+2
+    sta %c+2
+} 7

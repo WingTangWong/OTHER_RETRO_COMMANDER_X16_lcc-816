@@ -2,17 +2,17 @@
 # 8-bits
 
 stmt: ASGNI1(vregp, rc) {
-    sep #$20
+    ;sep #$20
     lda %1
+    ;rep #$20
     sta %0
-    rep #$20
 } 4
 
 stmt: ASGNU1(vregp, rc) {
-    sep #$20
+    ;sep #$20
     lda %1
+    ;rep #$20
     sta %0
-    rep #$20
 } 4
 
 #16-bit
@@ -122,18 +122,29 @@ stmt: ASGNI2(addressDP, reg) {
     sta %0
 } 2
 
+# indirection...
 
-
-
-stmt: ASGNI2(INDIRP4(vregp), rc) {
+stmt: ASGNI2(reg, rc) {
     lda %1
     sta [%0]
-} 2
+} 2+1
 
-stmt: ASGNU2(INDIRP4(vregp), rc) {
+stmt: ASGNU2(reg, rc) {
     lda %1
     sta [%0]
-} 2
+} 2+1
 
 
+stmt: ASGNI1(reg, rc) {
+    lda %1
+    sep #$20
+    sta [%0]
+    rep #$20
+} 4+1
 
+stmt: ASGNU1(reg, rc) {
+    lda %1
+    sep #$20
+    sta [%0]
+    rep #$20
+} 4+1

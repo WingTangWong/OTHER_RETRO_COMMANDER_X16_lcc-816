@@ -88,58 +88,58 @@ reg: INDIRI1(address) {
 reg: INDIRU1(address) {
     sep #$20
     lda >%0
-    sta %c
     rep #$20
+    sta %c
 } 4+1
 
 reg: INDIRI1(address) {
     sep #$20
     lda >%0
-    sta %c
     rep #$20
+    sta %c
 } 4+1
 
 reg: INDIRU1(const) {
     sep #$20
     lda >%0
-    sta %c
     rep #$20
+    sta %c
 } 4+1
 
 reg: INDIRI1(const) {
     sep #$20
     lda >%0
-    sta %c
     rep #$20
+    sta %c
 } 4+1
 
 
 reg: INDIRU1(reg) {
     sep #$20
     lda [%0]
-    sta %c
     rep #$20
+    sta %c
 } 4
 
 reg: INDIRI1(reg) {
     sep #$20
     lda [%0]
-    sta %c
     rep #$20
+    sta %c
 } 4
 
 reg: INDIRU1(ADDP4(reg, const_16_bit)) {
-    sep #$20
     ldy #%1
+    sep #$20
     lda [%0],y
-    sta %c
     rep #$20
+    sta %c
 } 5
 
 reg: INDIRI1(ADDP4(reg, const_16_bit)) {
-    sep #$20
     ldy #%1
+    sep #$20
     lda [%0],y
-    sta %c
     rep #$20
+    sta %c
 } 5
