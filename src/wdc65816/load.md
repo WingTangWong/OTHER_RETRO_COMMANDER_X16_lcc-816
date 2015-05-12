@@ -20,34 +20,30 @@ reg: LOADU2(const)  {
     sta %c
 } 2
 
-
+# and #$ff will be optimized out.
 reg: LOADI1(const) {
-    sep #$20
     lda #%0
+    and #$ff
     sta %c
-    rep #$20
 } 2
 
 reg: LOADU1(const) {
-    sep #$20
     lda #%0
+    and #$ff
     sta %c
-    rep #$20
 } 4
 
 # todo ...
 reg: LOADI1(reg)  {
-    sep #$20
     lda %0
+    and #$ff
     sta %c
-    rep #$20
 }  move(a) + 3
 
 reg: LOADU1(reg)  {
-    sep #$20
     lda %0
+    and #$ff
     sta %c
-    rep #$20
 }  move(a) + 3
 
 
