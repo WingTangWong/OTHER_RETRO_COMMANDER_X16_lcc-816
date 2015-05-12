@@ -148,3 +148,94 @@ stmt: ASGNU1(reg, rc) {
     sta [%0]
     rep #$20
 } 4+1
+
+
+# y-indirection.
+
+stmt: ASGNU2(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sta [%0],y
+} 3+1
+
+stmt: ASGNI2(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sta [%0],y
+} 3+1
+
+stmt: ASGNU1(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sep #$20
+    sta [%0],y
+    rep #$20
+} 4+1
+
+stmt: ASGNI1(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sep #$20
+    sta [%0],y
+    rep #$20
+} 4+1
+
+# 8-bit offset
+stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), INDIRP4(vregp)), rc) {
+    lda %0
+    and #$ff
+    tay
+    lda %2
+    sep #$20
+    sta [%1],y
+    rep #$20
+} 7+1
+
+stmt: ASGNI1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), INDIRP4(vregp)), rc) {
+    lda %0
+    and #$ff
+    tay
+    lda %2
+    sep #$20
+    sta [%1],y
+    rep #$20
+} 7+1
+
+stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)), rc) {
+    lda %2
+    ldy %0
+    sep #$20
+    sta [%1],y
+    rep #$20    
+} 5+1
+
+stmt: ASGNI1(ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)), rc) {
+    lda %2
+    ldy %0
+    sep #$20
+    sta [%1],y
+    rep #$20    
+} 5+1
+
+
+
+# static char buffer; buffer[uint16_t | uint8_t]
+stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), address), rc) {
+    ldx %0
+    lda %2
+    sep #$20
+    sta >%1,x
+    rep #$20
+} 5
+
+stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address), rc) {
+    lda %0
+    and #$ff
+    tax
+    lda %2
+    sep #$20
+    sta >%1,x
+    rep #$20
+} 6
+
+
