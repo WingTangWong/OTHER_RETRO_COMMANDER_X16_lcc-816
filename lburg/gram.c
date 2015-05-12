@@ -1652,11 +1652,14 @@ FILE *outfp = NULL;
 static char buf[BUFSIZ], *bp = buf;
 static int ppercent = 0;
 static int cost = 0;
+static const char *filename = NULL;
 
 
 struct file_entry {
 	struct file_entry *next;
 	FILE *infp;
+	const char *filename;
+	int yylineno;
 	char buf[BUFSIZ];
 	char *bp;
 };
@@ -1670,6 +1673,8 @@ void push_file(const char *name) {
 	memset(e, 0, sizeof(*e));
 
 	e->infp = infp;
+	e->filename = filename;
+	e->yylineno = yylineno;
 	e->bp = bp;
 	memcpy(e->buf, buf, sizeof(buf));
 	file_stack = e;
@@ -1677,7 +1682,8 @@ void push_file(const char *name) {
 	infp = NULL;
 	bp = buf;
 	buf[0] = 0;
-
+	filename = name;
+	yylineno = 0;
 
 	infp = fopen(name, "r");
 	if (!infp) {
@@ -1697,6 +1703,9 @@ void pop_file() {
 	fclose(infp);
 
 	infp = e->infp;
+	filename = e->filename;
+	yylineno = e->yylineno;
+
 	memcpy(buf, e->buf, sizeof(buf));
 	bp = e->bp;
 
@@ -1761,6 +1770,8 @@ void yyerror(char *fmt, ...) {
 	va_list ap;
 
 	va_start(ap, fmt);
+	if (filename != NULL)
+		fprintf(stderr, "file: %s: ", filename);
 	if (yylineno > 0)
 		fprintf(stderr, "line %d: ", yylineno);
 	vfprintf(stderr, fmt, ap);
