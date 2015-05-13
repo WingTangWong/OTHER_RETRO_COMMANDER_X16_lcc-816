@@ -349,7 +349,11 @@ static void dumprule(int rulenum) {
 		fprint(stderr, "\n");
 }
 
+static unsigned nextlabel = 0;
+
 void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
+
+	unsigned maxlabel = 0;
 
 	assert(fmt);
 	if (*fmt == '?') {
@@ -361,6 +365,18 @@ void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
 	}
 
 	for ( ; *fmt; fmt++) {
+
+		/* @[a-z] generates a unique local label. */
+		if (*fmt == '@') {
+			char label = fmt[1];
+			if (label >= 'a' && label <= 'z') {
+				maxlabel = 1;
+				print("@%d$%c", nextlabel, label);
+				fmt++;
+				continue;
+			}
+		}
+
 		if (*fmt != '%')
 			(void)putchar(*fmt);
 		else if (*++fmt == 'F')
@@ -372,6 +388,8 @@ void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
 		else
 			(void)putchar(*fmt);
 	}
+
+	nextlabel += maxlabel;
 }
 
 unsigned emitasm(Node p, int nt) {
@@ -379,6 +397,9 @@ unsigned emitasm(Node p, int nt) {
 	short *nts;
 	char *fmt;
 	Node kids[10];
+
+	unsigned maxlabel = 0;
+
 
 	void (*function)(Node);
 
@@ -407,7 +428,20 @@ unsigned emitasm(Node p, int nt) {
 				while (*fmt++ != '\n')
 					;
 		}
-		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++)
+		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++) {
+
+			/* @[a-z] generates a unique local label. */
+			if (*fmt == '@') {
+				char label = fmt[1];
+				if (label >= 'a' && label <= 'z') {
+					maxlabel = 1;
+					print("@%d$%c", nextlabel, label);
+					fmt++;
+					continue;
+				}
+			}
+
+
 			if (*fmt != '%')
 				(void)putchar(*fmt);
 			else if (*++fmt == 'F')
@@ -418,7 +452,11 @@ unsigned emitasm(Node p, int nt) {
 				fputs(p->syms[*fmt - 'a']->x.name, stdout);
 			else
 				(void)putchar(*fmt);
+		}
 	}
+
+	nextlabel += maxlabel;
+
 	return 0;
 }
 void emit(Node p) {
