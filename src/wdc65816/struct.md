@@ -32,7 +32,7 @@ stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) {
 stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) {
 	lda %1
 	sta [%0]
-	
+
 	lda %1+2
 	ldy #2
 	sta [%0],y
@@ -74,7 +74,7 @@ stmt: ARGB(INDIRB(vregp)) {
 	ldx #0
 
 @loop:
-	lda %0,x
+	lda %0+%a-2,x
 	pha
 	inx
 	inx
@@ -89,21 +89,32 @@ stmt: ARGB(INDIRB(vregp)) {
 
 stmt: ARGB(INDIRB(vregp)) {
 	; argb %a
-	pei %0
 	pei %0+2
+	pei %0+0
 } struct_size_is(a, 4)
 
 stmt: ARGB(INDIRB(vregp)) {
 	; argb %a
-	pei %0
-	pei %0+2
 	pei %0+4
+	pei %0+2
+	pei %0+0
 } struct_size_is(a, 6)
 
 stmt: ARGB(INDIRB(vregp)) {
 	; argb %a
-	pei %0
-	pei %0+2
+	pei %0+6
 	pei %0+4
-	pei %0+8
+	pei %0+2
+	pei %0+0
 } struct_size_is(a, 8)
+
+stmt: ARGB(INDIRB(vregp)) {
+	; argb %a
+	pei %0+8
+	pei %0+6
+	pei %0+4
+	pei %0+2
+	pei %0+0
+} struct_size_is(a, 10)
+
+#
