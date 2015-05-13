@@ -1,7 +1,11 @@
 # conversion
 #pragma mark - to int
 
-# int8 / uint8_t -> int16_t
+# CVI -> convert from signed integer
+# CVU -> convert from unsigned integer
+# CVP -> convert from pointer
+# CVF -> convert from float
+
 
 %{
 
@@ -51,9 +55,9 @@ static void zero_extend_16(Node p, Node *kids, short *nts) {
 }
 
 
-static void sign_extend_32(Node p, Node *kids, short *nts) {
+static void sign_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 
-	int size = opsize(p->x.kids[0]->op);
+	if (!size) size = opsize(p->x.kids[0]->op);
 	
 	if (size >= 4) {
 		EMIT(
@@ -103,9 +107,9 @@ static void sign_extend_32(Node p, Node *kids, short *nts) {
 
 }
 
-static void zero_extend_32(Node p, Node *kids, short *nts) {
+static void zero_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 
-	int size = opsize(p->x.kids[0]->op);
+	if (!size) size = opsize(p->x.kids[0]->op);
 	
 	if (size >= 4) {
 		EMIT(
@@ -114,7 +118,6 @@ static void zero_extend_32(Node p, Node *kids, short *nts) {
 			"\t" "sta %c\n"
 			"\t" "stx %c+2\n"
 		);
-		return;	
 	}
 
 	if (size == 1) {
@@ -165,19 +168,29 @@ reg: CVUU2(reg) ^{
 
 # INDIRI2(vregp)
 reg: CVII4(reg) ^{
-	sign_extend_32(p, kids, nts);
+	sign_extend_32(p, kids, nts, 0);
 } 7
 
 reg: CVIU4(reg) ^{
-	sign_extend_32(p, kids, nts);
+	sign_extend_32(p, kids, nts, 0);
 } 7
 
 reg: CVUI4(reg) ^{
-	zero_extend_32(p, kids, nts);
+	zero_extend_32(p, kids, nts, 0);
 } 4
 
 reg: CVUU4(reg) ^{
-	zero_extend_32(p, kids, nts);
+	zero_extend_32(p, kids, nts, 0);
 } 4
 
 
+
+# uint32_t = uint8_t
+reg: CVIU4(CVUI2(INDIRU1(vregp))) ^{
+	zero_extend_32(p, kids, nts, 1);
+} 4
+
+# int32_t = int8_t
+reg: CVII4(CVII2(INDIRI1(vregp))) ^{
+	sign_extend_32(p, kids, nts, 1);
+} 7
