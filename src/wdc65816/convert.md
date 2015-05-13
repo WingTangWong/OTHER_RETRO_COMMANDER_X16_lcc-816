@@ -194,3 +194,8 @@ reg: CVIU4(CVUI2(INDIRU1(vregp))) ^{
 reg: CVII4(CVII2(INDIRI1(vregp))) ^{
 	sign_extend_32(p, kids, nts, 1);
 } 7
+
+
+reg: CVII4(CVUI2(INDIRU1(vregp))) ^{
+	zero_extend_32(p, kids, nts, 1);
+} 4

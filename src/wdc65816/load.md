@@ -106,3 +106,8 @@ reg: LOADI2(LOADU4(reg)) {
     lda %0
     sta %c
 } 2
+
+reg: LOADU1(LOADU2(reg)) {
+    lda %0
+    sta %c
+} 2    
