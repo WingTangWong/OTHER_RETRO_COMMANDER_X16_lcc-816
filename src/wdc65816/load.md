@@ -92,3 +92,17 @@ reg: LOADU4(const)  {
     lda #^%0
     sta %c+2
 } 4
+
+# prevent extra temporary conversions.
+
+# unsigned xxx(char *cp) { return (unsigned)cp; }
+reg: LOADU2(LOADU4(reg)) {
+    lda %0
+    sta %c
+} 2
+
+# int xxx(char *cp) {return (int)cp; }
+reg: LOADI2(LOADU4(reg)) {
+    lda %0
+    sta %c
+} 2
