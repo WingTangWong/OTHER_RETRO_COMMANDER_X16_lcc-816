@@ -287,3 +287,8 @@ reg: CALLU2(reg) ^{
 reg: CALLP4(reg) ^{
 	call_indirect(p, kids, nts);
 } 10
+
+
+stmt: CALLB(address) {
+	; callb %0
+}
