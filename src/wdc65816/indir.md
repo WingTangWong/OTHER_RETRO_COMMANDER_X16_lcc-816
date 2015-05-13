@@ -143,3 +143,26 @@ reg: INDIRI1(ADDP4(reg, const_16_bit)) {
     rep #$20
     sta %c
 } 5
+
+
+
+# static char buffer[]; x = buffer[uint16_t]
+reg: INDIRU1(ADDP4(CVUU4(INDIRU2(vregp)), address)) {
+    ldx %0
+    sep #$20
+    lda >%1,x
+    rep #$20
+    sta %c
+} 5
+
+
+# could wrap in sep #$30 to use 8-bit x.
+reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address)) {
+    lda %0
+    and #$ff
+    tax
+    sep #$20
+    lda >%1,x
+    rep #$20
+    sta %c 
+} 5
