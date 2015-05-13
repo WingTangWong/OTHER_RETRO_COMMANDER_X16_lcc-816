@@ -17,7 +17,7 @@ static char *iigs_bcd_add;
 static char *iigs_bcd_sub;
 static char *iigs_rol;
 static char *iigs_ror;
-
+static char *iigs_popcount;
 
 #define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
 
@@ -37,6 +37,8 @@ static void init_builtins(void) {
 
 	iigs_rol = STRINGN("__builtin_rol");
 	iigs_ror = STRINGN("__builtin_ror");
+
+	iigs_popcount = STRINGN("__builtin_popcount");
 }
 
 static int is_builtin(Node p, const char *fx) {
@@ -209,9 +211,29 @@ reg: CALLU2(address) {
 	; %0
 	pla
 	lsr
+	bcc @store
+	ora #$8000
+@store:
 	sta %c
-	lda #0
-	ror 
-	tsb %c
 } is_builtin(a, iigs_ror)
 # ora.cs #$8000 ?
+
+
+# unsigned __builtin_popcount(unsigned)
+# Kernighan (sic) / Wegner algorithm
+reg: CALLU2(address) {
+	; %0
+	pla
+	ldx #0
+	sta %c ; scratch
+	cmp #0
+	beq @fini
+@loop:
+	inx
+	dec
+	eor %c
+	sta %c
+	bne @loop
+	stx %c
+@fini:
+} is_builtin(a, iigs_popcount)

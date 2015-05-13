@@ -18,5 +18,10 @@ unsigned __builtin_bcd_sub(unsigned, unsigned);
 unsigned __builtin_ror(unsigned);
 unsigned __builtin_rol(unsigned);
 
+unsigned __builtin_popcount(unsigned);
+
+/* 1 if odd number of bits, 0 if even number of bits */
+#define __builtin_parity(x) (__builtin_popcount(x) & 0x01)
+
 #endif
 
