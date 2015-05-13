@@ -137,3 +137,33 @@ reg: ADDP4(reg, reg) {
     adc %1+2
     sta %c+2
 } 7
+
+
+
+# combine the conversion and the addition.
+reg: ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)) {
+    lda %0
+    clc
+    adc %1
+    sta %c
+    lda #0
+    adc %1+2
+    sta %c+2
+} 7
+
+
+reg: ADDP4(CVII4(INDIRI2(vregp)), INDIRP4(vregp)) {
+    ldx #0
+    lda %0
+    cmp #0
+    bpl @ok
+    dex
+@ok
+    clc
+    adc %1
+    sta %c
+    txa
+    adc %1+2
+    sta %c+2
+} 11
+
