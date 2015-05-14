@@ -249,15 +249,6 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				firstarg = save;
 				left_to_right = save_left_to_right;
 
-				if (xcall) {
-					#if 0
-					// not sure if this is needed. It can scan
-					// forward to find the CALL and type.
-					//xcall->op = XCALL + opkind(p->op);
-					NEW0(xcall->syms[0], FUNC);
-					xcall->syms[0]->type = p->syms[0]->type;
-					#endif
-				}
  			} break;
 
 	case ARG:   { assert(tlab == 0 && flab == 0);
