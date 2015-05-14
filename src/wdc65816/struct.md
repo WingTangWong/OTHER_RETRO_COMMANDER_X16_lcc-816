@@ -24,6 +24,8 @@ stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) {
 } 20
 
 
+
+
 stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) {
 	lda %1
 	sta [%0]
@@ -68,6 +70,33 @@ stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) {
 	sta [%0],y
 } struct_size_is(a, 8)
 
+
+stmt: ASGNB(vregp, INDIRB(address)) {
+	lda >%1
+	sta %0
+} struct_size_is(a, 2)
+
+stmt: ASGNB(vregp, INDIRB(address)) {
+	lda >%1
+	sta %0
+	
+	lda >%1+2
+	sta %0+2
+} struct_size_is(a, 4)
+
+stmt: ASGNB(vregp, INDIRB(address)) {
+	lda >%1
+	sta %0
+
+	lda >%1+2
+	sta %0+2
+
+	lda >%1+4
+	sta %0+4
+} struct_size_is(a, 6)
+
+
+# argb
 
 stmt: ARGB(INDIRB(vregp)) {
 	; argb
