@@ -67,6 +67,31 @@ reg: INDIRI2(ADDP4(reg, const_16_bit)) {
     sta %c
 } 3+2
 
+#pragma mark - 32 bit
+
+reg: INDIRP4(reg) {
+    lda [%0]
+    sta %c
+    ldy #2
+    lda [%0],y
+    sta %c+2
+} 5
+
+reg: INDIRU4(reg) {
+    lda [%0]
+    sta %c
+    ldy #2
+    lda [%0],y
+    sta %c+2
+} 5
+
+reg: INDIRI4(reg) {
+    lda [%0]
+    sta %c
+    ldy #2
+    lda [%0],y
+    sta %c+2
+} 5
 
 
 #pragma mark - 8-bit
