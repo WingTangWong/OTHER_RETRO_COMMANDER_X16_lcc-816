@@ -83,7 +83,7 @@ void copy_struct_indirect(Node p, Node *kids, short *nts) {
 
 stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) ^{
 	// returning struct via pascal?
-	if (kids[0]->syms[0] && kids[0]->syms[0] == retv) {
+	if (cfunc_attr && cfunc_attr->pascal && kids[0]->syms[0] && kids[0]->syms[0] == retv) {
 		copy_struct(p, kids, nts);
 		return;
 	}

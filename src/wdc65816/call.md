@@ -6,6 +6,43 @@
 #define STACK_REPAIR_PLY_LIMIT 6
 #define STACK_REPAIR_ADC_MIN 254
 
+
+/*
+ * cdecl api:
+ * 16-bit: returned in a
+ * 32-bit: returned in x:a
+ * 64-bit: ????
+ * struct/union: pass secret pointer parameter, return w/ pointer
+ * float/double/extended... ??? like struct/union?
+ *
+ * pascal api:
+ * return everything via stack.
+ * struct/union currently broken...
+ */
+
+
+static unsigned function_is_pascal(Node p) {
+
+	Type t = p->syms[1] ? p->syms[1]->type : NULL;
+
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
+
+	if (attr && attr->pascal) return 1;
+	return 0;
+}
+
+static unsigned function_is_cdecl(Node p) {
+
+	Type t = p->syms[1] ? p->syms[1]->type : NULL;
+
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
+
+	if (attr && attr->pascal) return 0;
+	return 1;
+}
+
+
+
 /* returns 1 if this is a tool dispatch */
 static unsigned tool_dispatch(Node p, Type t, FunctionAttr *attr) {
 
@@ -27,20 +64,33 @@ static unsigned tool_dispatch(Node p, Type t, FunctionAttr *attr) {
 static void return_value(Node p, Type t, FunctionAttr *attr) {
 
 	// see emitstring()
+	Type rt = NULL;
 	const char *rv;
 	unsigned pascal = 0;
+	int return_size = 0;
 
 	if (p->op == CALL+V) return;
+	if (p->op == CALL+B) return;
+
+	// CALLB doesn't return via %c.
+
 
 	if (attr && attr->pascal) pascal = 1;
 
 	rv = p->syms['c' - 'a']->x.name;
 
-	unsigned size = opsize(p->op);
+	rt = freturn(t);
 
-	if (pascal || size > 4) {
+	if (rt) {
+		return_size = rt->size;
+		if (isstruct(rt) && !pascal) return_size = 0;
+	}
+
+	if (!return_size) return;
+
+	if (pascal) {
 		unsigned i;
-		for(i = 0; i < size; i += 2) {
+		for(i = 0; i < return_size; i += 2) {
 			print("\tpla\n");
 			print("\tsta %s+%d\n", rv, i);
 		}
@@ -49,18 +99,25 @@ static void return_value(Node p, Type t, FunctionAttr *attr) {
 
 	// cdecl - return via a or a/x
 	print("\tsta %s\n", rv);
-	if (size == 4)
+	if (return_size == 4)
 		print("\tstx %s+2\n", rv);
 }
 
 static void repair_stack(Node p, Type t, FunctionAttr *attr) {
 	// for a cdecl call, fix the stack.
+
+	Type rt = freturn(t);
+
 	int arg_size = p->syms[0] ? p->syms[0]->u.c.v.i : 0;
 
 	if (attr) {
 		if (attr->pascal) return;
 		//stdcall  - caller cleans up, unless variadic.
 	}
+
+	if (isstruct(rt)) arg_size += 4;
+
+
 
 	// if > 254 args, need to adjust the stack w/ math.
 	if (arg_size >= STACK_REPAIR_ADC_MIN) {
@@ -153,6 +210,7 @@ static void call_direct(Node p, Node *kids, short *nts) {
 stmt: XCALLV ^{
 	/* set up parameters for function call */
 	Type t = NULL;
+	Type rt = NULL;
 	FunctionAttr *attr = NULL;
 
 	int arg_size = 0;
@@ -162,6 +220,7 @@ stmt: XCALLV ^{
 	unsigned stdcall = 0;
 	unsigned cdecl = 1;
 	unsigned xcall = 0;
+
 
 
 	// scan forward to find the call.
@@ -183,9 +242,9 @@ stmt: XCALLV ^{
 	if (p->syms[1]) t = p->syms[1]->type;
 	if (t && t->u.f.attr) attr = t->u.f.attr;
 
-	return_size = opsize(p->op);
+	if (t) rt = freturn(t);
 
-	// struct size = p->syms[0]->u.c.v.i
+
 
 	if (attr && attr->pascal) {
 		pascal = 1;
@@ -203,7 +262,21 @@ stmt: XCALLV ^{
 		}
 	}
 
-	if (pascal || return_size > 4)
+	if (cdecl || stdcall) {
+		// structs returned via secret pointer.
+		// todo -- same for extended, double, uint64_t, etc.
+		if (isstruct(rt)) arg_size += 4;
+	}
+
+	if (rt) {
+		return_size = rt->size;
+		if (isstruct(rt) && !pascal) return_size = 0;
+	}
+	//return_size =  rt ? rt->size : 0; //opsize(p->op);
+
+
+
+	if (pascal /* || return_size > 4 */)
 	{
 		// todo -- what about struct returns (toolbox)
 		while (return_size > 0) {
@@ -216,6 +289,9 @@ stmt: XCALLV ^{
 		print("\t; save stack\n" "\ttsx\n" "\tphx\n");
 	}
 }
+
+const_or_address: const "%a"
+const_or_address: address "%a"
 
 stmt: CALLV(address) ^{
 	call_direct(p, kids, nts);
@@ -271,6 +347,48 @@ reg: CALLP4(const) ^{
 	call_direct(p, kids, nts);
 } 1
 
+# %a = ?
+# %b = size of struct...
+#
+# assert(p->syms[1] && p->syms[1]->type && isfunc(p->syms[1]->type));
+# p->syms[1] = intconst(freturn(p->syms[1]->type)->size);
+#
+# second argument is location (vregp, addrl, addrg) for the return value.
+# if pascal, pull and store after the call.
+# if cdecl, push pointer before the call.
+stmt: CALLB(const_or_address, vregp) ^{
+
+	int pascal = function_is_pascal(p);
+	int size = (p->syms[0]->u.c.v.i + 1) & ~0x01; // verify...
+
+
+
+	if (!pascal) {
+		EMIT(
+			_("pea 0")
+			_("tdc")
+			_("clc")
+			_("adc #%1")
+			_("pha")
+		);
+	}
+
+	call_direct(p, kids, nts);
+	// if pascal, pull into vregp.
+	if (pascal) {
+		int i;
+		int ofs = framesize;
+		for (i = 0; i < size; i += 2) {
+			framesize = i;
+			EMIT(
+				_("pla")
+				_("sta %1+%F")
+			);
+		}
+		framesize = ofs;
+	}
+} 1
+
 
 reg: CALLV(reg) ^{
 	call_indirect(p, kids, nts);
@@ -289,6 +407,4 @@ reg: CALLP4(reg) ^{
 } 10
 
 
-stmt: CALLB(address) {
-	; callb %0
-}
+
