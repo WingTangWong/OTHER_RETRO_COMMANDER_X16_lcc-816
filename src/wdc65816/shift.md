@@ -14,22 +14,25 @@ reg: RSHU2(reg, const) ^{
     unsigned value = constValue(kids[1]);
 
     if (value > 16) {
-        EMIT("\tstz %c\n");
+        EMIT(_("stz %c"));
         return;
     }
     EMIT("\tlda %0\n");
 
     if (value >= 8) {
 
-        EMIT("\txba\n\tand #$00ff\n");
+        EMIT(
+            _("xba")
+            _("and #$00ff")
+        );
         value -= 8;
     }
 
     while (value) {
-        EMIT("\tlsr a\n");
+        EMIT(_("lsr a"));
         value--;
     }
-    EMIT("\tsta %c\n");
+    EMIT(_("sta %c"));
 
 } 10
 
@@ -71,30 +74,38 @@ reg: LSHU2(reg, const) ^{
     unsigned value = constValue(kids[1]);
 
     if (value > 16) {
-        EMIT("\tstz %c\n");
+        EMIT(_("stz %c"));
         return;
     }
-    EMIT("\tlda %0\n");
+    EMIT(_("lda %0"));
 
     /*
     if (value == 15) {
         // move bit 1 to bit  16.
-        EMIT("\tlsr a\n\tlda #0\n\tror a\n\tsta %c\n);
+        EMIT(
+            _("lsr a")
+            _("lda #0")
+            _("ror a")
+            _("sta %c")
+        );
         return;
     }
     */
 
     if (value >= 8) {
 
-        EMIT("\txba\n\tand #$ff00\n");
+        EMIT(
+            _("xba")
+            _("and #$ff00")
+        );
         value -= 8;
     }
 
     while (value) {
-        EMIT("\tasl a\n");
+        EMIT(_("asl a"));
         value--;
     }
-    EMIT("\tsta %c\n");
+    EMIT(_("sta %c"));
 
 } 10
 
@@ -103,31 +114,38 @@ reg: LSHI2(reg, const) ^{
     unsigned value = constValue(kids[1]);
 
     if (value > 16) {
-        EMIT("\tstz %c\n");
+        EMIT(_("stz %c"));
         return;
     }
-    EMIT("\tlda %0\n");
+    EMIT(_("lda %0"));
 
     /*
     if (value == 15) {
         // move bit 1 to bit  16.
-        EMIT("\tlsr a\n\tlda #0\n\tror a\n\tsta %c\n);
+        EMIT(
+            _("lsr a")
+            _("lda #0")
+            _("ror a")
+            _("sta %c")
+        );
         return;
     }
     */
 
     if (value >= 8) {
 
-        EMIT("\txba\n\tand #$ff00\n");
+        EMIT(
+            _("xba")
+            _("and #$ff00")
+        );
         value -= 8;
     }
 
     while (value) {
-        EMIT("\tasl a\n");
+        EMIT(_("asl a"));
         value--;
     }
-    EMIT("\tsta %c\n");
-
+    EMIT(_("sta %c"));
 } 10
 
 

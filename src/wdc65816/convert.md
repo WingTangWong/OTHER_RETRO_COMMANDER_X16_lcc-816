@@ -14,22 +14,22 @@ static void sign_extend_16(Node p, Node *kids, short *nts) {
 
 	if (size >= 2) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "sta %c\n"
+			_("lda %0")
+			_("sta %c")
 		);
 		return;
 	}
 
 	EMIT(
-		"\t" "lda %0\n"
-		"\t" "and #$ff\n"
-		"\t" "bit #$80\n"
-		"\t" "beq @ok\n"
+		_("lda %0")
+		_("and #$ff")
+		_("bit #$80")
+		_("beq @ok")
 
-		"\t" "ora #$ff00\n"
+		_("ora #$ff00")
 
-		"@ok\n"
-		"\t" "sta %c\n"
+		__("@ok")
+		_("sta %c")
 	);
 
 }
@@ -40,16 +40,16 @@ static void zero_extend_16(Node p, Node *kids, short *nts) {
 
 	if (size >= 2) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "sta %c\n"
+			_("lda %0")
+			_("sta %c")
 		);
 		return;
 	}
 
 	EMIT(
-		"\t" "lda %0\n"
-		"\t" "and #$ff\n"
-		"\t" "sta %c\n"
+		_("lda %0")
+		_("and #$ff")
+		_("sta %c")
 	);
 
 }
@@ -61,44 +61,44 @@ static void sign_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 	
 	if (size >= 4) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "ldx %0+2\n"
-			"\t" "sta %c\n"
-			"\t" "stx %c+2\n"
+			_("lda %0")
+			_("ldx %0+2")
+			_("sta %c")
+			_("stx %c+2")
 		);
 		return;	
 	}
 
 	if (size == 1) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "ldx #0\n"
-			"\t" "and #$ff\n"
-			"\t" "bit #$80\n"
-			"\t" "beq @ok\n"
+			_("lda %0")
+			_("ldx #0")
+			_("and #$ff")
+			_("bit #$80")
+			_("beq @ok")
 
-			"\t" "ora #$ff00\n"
-			"\t" "dex\n"
+			_("ora #$ff00")
+			_("dex")
 
-			"@ok\n"
-			"\t" "sta %c\n"
-			"\t" "stx %c+2\n"
+			__("@ok")
+			_("sta %c")
+			_("stx %c+2")
 		);
 		return;
 	}
 
 	if (size == 2) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "ldx #0\n"
-			"\t" "bit #$8000\n"
-			"\t" "beq @ok\n"
+			_("lda %0")
+			_("ldx #0")
+			_("bit #$8000")
+			_("beq @ok")
 
-			"\t" "dex\n"
+			_("dex")
 
-			"@ok\n"
-			"\t" "sta %c\n"
-			"\t" "stx %c+2\n"
+			__("@ok")
+			_("sta %c")
+			_("stx %c+2")
 		);
 		return;
 	}
@@ -113,28 +113,28 @@ static void zero_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 	
 	if (size >= 4) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "ldx %0+2\n"
-			"\t" "sta %c\n"
-			"\t" "stx %c+2\n"
+			_("lda %0")
+			_("ldx %0+2")
+			_("sta %c")
+			_("stx %c+2")
 		);
 	}
 
 	if (size == 1) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "and #$ff\n"
-			"\t" "sta %c\n"
-			"\t" "stz %c+2\n"
+			_("lda %0")
+			_("and #$ff")
+			_("sta %c")
+			_("stz %c+2")
 		);
 		return;
 	}
 
 	if (size == 2) {
 		EMIT(
-			"\t" "lda %0\n"
-			"\t" "sta %c\n"
-			"\t" "stz %c+2\n"
+			_("lda %0")
+			_("sta %c")
+			_("stz %c+2")
 		);
 		return;
 	}
