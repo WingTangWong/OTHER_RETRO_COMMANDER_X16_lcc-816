@@ -293,59 +293,40 @@ stmt: XCALLV ^{
 const_or_address: const "%a"
 const_or_address: address "%a"
 
-stmt: CALLV(address) ^{
-	call_direct(p, kids, nts);
-} 1
-
-stmt: CALLV(const) ^{
+stmt: CALLV(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
 
 
-reg: CALLI2(address) ^{
-	call_direct(p, kids, nts);
-} 1
-
-reg: CALLI2(const) ^{
+reg: CALLI2(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
 
 
-reg: CALLU2(address) ^{
+
+reg: CALLU2(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
-reg: CALLU2(const) ^{
+
+reg: CALLU4(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
-reg: CALLU4(address) ^{
-	call_direct(p, kids, nts);
-} 1
 
-reg: CALLU4(const) ^{
-	call_direct(p, kids, nts);
-} 1
-
-reg: CALLI4(address) ^{
-	call_direct(p, kids, nts);
-} 1
-
-reg: CALLI4(const) ^{
+reg: CALLI4(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
 
 
-reg: CALLP4(address) ^{
+
+reg: CALLP4(const_or_address) ^{
 	call_direct(p, kids, nts);
 } 1
 
-reg: CALLP4(const) ^{
-	call_direct(p, kids, nts);
-} 1
 
 # %a = ?
 # %b = size of struct...
