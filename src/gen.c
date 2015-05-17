@@ -547,6 +547,7 @@ void setreg(Node p, Symbol r) {
 void rtarget(Node p, int n, Symbol r) {
 	Node q = p->kids[n];
 
+	if (!q->syms[RX]) return; // 816 -- struct assignment...
 	assert(q);
 	assert(r);
 	assert(r->sclass == REGISTER || !r->x.wildcard);
