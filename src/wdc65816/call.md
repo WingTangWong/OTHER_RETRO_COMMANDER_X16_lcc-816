@@ -41,6 +41,20 @@ static unsigned function_is_cdecl(Node p) {
 	return 1;
 }
 
+static unsigned function_return_size(Node p) {
+
+	Type t = p->syms[1] ? p->syms[1]->type : NULL;
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
+	Type rt = freturn(t);
+	unsigned size;
+
+	size = (rt->size + 1) & ~0x01;
+	if (isstruct(rt)) {
+		if (!attr || !attr->pascal) size = 0;
+	}
+
+	return size;
+}
 
 
 /* returns 1 if this is a tool dispatch */
@@ -340,7 +354,7 @@ reg: CALLP4(const_or_address) ^{
 stmt: CALLB(const_or_address, vregp) ^{
 
 	int pascal = function_is_pascal(p);
-	int size = (p->syms[0]->u.c.v.i + 1) & ~0x01; // verify...
+	int size = function_return_size(p);
 
 
 
