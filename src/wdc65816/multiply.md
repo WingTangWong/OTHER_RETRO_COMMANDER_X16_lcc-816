@@ -4,7 +4,7 @@ reg: MULU2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~mulu2
+    jsl __mulu2
     sta %c
 } 20
 
@@ -13,17 +13,28 @@ reg: MULI2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~muli2
+    jsl __muli2
     sta %c
 } 20
 
 
 # x * 3 = (x * 2) + x
+#
+# simplify leaves constant in left side for multiplication.
+#
 reg: MULU2(reg, const_3) {
     lda %0
     asl a
     clc
     adc %0
+    sta %c
+} 5
+
+reg: MULU2(const_3, reg) {
+    lda %1
+    asl a
+    clc
+    adc %1
     sta %c
 } 5
 
@@ -33,6 +44,15 @@ reg: MULU2(reg, const_5) {
     asl a
     clc
     adc %0
+    sta %c
+} 6
+
+reg: MULU2(const_5, reg) {
+    lda %1
+    asl a
+    asl a
+    clc
+    adc %1
     sta %c
 } 6
 
@@ -46,13 +66,23 @@ reg: MULU2(reg, const_10) {
     sta %c
 } 7
 
+reg: MULU2(const_10, reg) {
+    lda %1
+    asl a
+    asl a
+    clc
+    adc %1
+    asl a
+    sta %c
+} 7
+
 #pragma mark - division
 
 reg: DIVU2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~divu2
+    jsl __divu2
     sta %c
 } 20
 
@@ -60,7 +90,7 @@ reg: DIVI2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~divi2
+    jsl __divi2
     sta %c
 } 20
 
@@ -70,7 +100,7 @@ reg: MODU2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~modu2
+    jsl __modu2
     sta %c
 } 20
 
@@ -78,6 +108,6 @@ reg: MODI2(rc, rc) {
 
     lda %0
     ldx %1
-    jsl ~modi2
+    jsl __modi2
     sta %c
 } 20
