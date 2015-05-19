@@ -93,6 +93,18 @@ const_16_bit: CNSTI4 "%a" range(a, 0, 0xffff)
 const_16_bit: CNSTI8 "%a" range(a, 0, 0xffff)
 
 
+const_16_bit_minus_4: CNSTU1 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTU2 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTU4 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTU8 "%a" range(a, 0, 0xffff-4)
+
+const_16_bit_minus_4: CNSTI1 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTI2 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTI4 "%a" range(a, 0, 0xffff-4)
+const_16_bit_minus_4: CNSTI8 "%a" range(a, 0, 0xffff-4)
+
+
+
 #const_positive: CNSTU2 "%a" range(a, 0x0000, 0x7fff)
 #const_positive: CNSTI2 "%a" range(a, 0x0000, 0x7fff)
 

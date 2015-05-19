@@ -94,6 +94,16 @@ reg: INDIRI4(reg) {
 } 5
 
 
+# ASGNP4(VREGP(s), INDIRP4(ADDP4(reg, CNSTI4(4))))
+reg: INDIRP4(ADDP4(reg, const_16_bit_minus_4)) {
+    ldy #%1
+    lda [%0],y
+    sta %c
+    ldy #%1+2
+    lda [%0],y
+    sta %c+2
+} 6
+
 #pragma mark - 8-bit
 
 reg: INDIRU1(address) {
