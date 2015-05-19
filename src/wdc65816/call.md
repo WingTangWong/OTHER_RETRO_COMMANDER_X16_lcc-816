@@ -31,6 +31,16 @@ static unsigned function_is_pascal(Node p) {
 	return 0;
 }
 
+static unsigned function_is_stdcall(Node p) {
+
+	Type t = p->syms[1] ? p->syms[1]->type : NULL;
+
+	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
+
+	if (attr && attr->stdcall) return 1;
+	return 0;
+}
+
 static unsigned function_is_cdecl(Node p) {
 
 	Type t = p->syms[1] ? p->syms[1]->type : NULL;
@@ -38,6 +48,7 @@ static unsigned function_is_cdecl(Node p) {
 	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
 
 	if (attr && attr->pascal) return 0;
+	if (attr && attr->stdcall) return 0;
 	return 1;
 }
 
@@ -126,6 +137,7 @@ static void repair_stack(Node p, Type t, FunctionAttr *attr) {
 
 	if (attr) {
 		if (attr->pascal) return;
+		if (attr->stdcall) return; // unless variadic...
 		//stdcall  - caller cleans up, unless variadic.
 	}
 
@@ -159,26 +171,6 @@ static void call_indirect(Node p, Node *kids, short *nts) {
 	Type t = p->syms[1] ? p->syms[1]->type : NULL;
 	FunctionAttr *attr = t && t->u.f.attr ? t->u.f.attr : NULL;
 
-
-
-#if 0
-    int lab = genlabel(1);
-
-    // generate an rtl address
-    EMIT("\tphk\n");
-    print("\tpea L%d-1\n", lab);
-
-    // jsl address = rtl address - 1
-    // 
-    EMIT("\tpei %0+1\n");
-    EMIT("\tphb\n"); // 1 byte placeholder
-    EMIT("\tlda %0\n");
-    EMIT("\tdec a\n");
-    EMIT("\tsta 1,s\n");
-    EMIT("\trtl\n");
-    print("L%d:\n", lab); // label for rtl.
-
-#endif
 	
 	if (attr && attr->near) {
 		EMIT("\tldx %0\n");
