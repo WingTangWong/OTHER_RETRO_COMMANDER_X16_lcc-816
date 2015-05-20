@@ -108,8 +108,8 @@ const_16_bit_minus_4: CNSTI8 "%a" range(a, 0, 0xffff-4)
 #const_positive: CNSTU2 "%a" range(a, 0x0000, 0x7fff)
 #const_positive: CNSTI2 "%a" range(a, 0x0000, 0x7fff)
 
-#const_negative: CNSTU2 "%a" range(a, 0x8000, 0xffff)
-#const_negative: CNSTI2 "%a" range(a, 0x8000, 0xffff)
+const_negative: CNSTU2 "%a" range(a, -32768, -1)
+const_negative: CNSTI2 "%a" range(a, -32768, -1)
 
 const: CNSTU1 "%a" 
 const: CNSTU2 "%a" 

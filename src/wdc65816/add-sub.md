@@ -167,3 +167,14 @@ reg: ADDP4(CVII4(INDIRI2(vregp)), INDIRP4(vregp)) {
     sta %c+2
 } 11
 
+
+
+reg: ADDP4(CVII4(const_negative), reg) {
+    lda %1
+    sec
+    sbc #%0
+    sta %c
+    lda %1+2
+    sbc #-1
+    sta %c+2
+} 7
