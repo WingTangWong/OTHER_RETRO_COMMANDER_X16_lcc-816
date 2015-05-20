@@ -18,6 +18,7 @@ static char *iigs_bcd_sub;
 static char *iigs_rol;
 static char *iigs_ror;
 static char *iigs_popcount;
+static char *iigs_tool_error;
 
 #define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
 
@@ -39,6 +40,8 @@ static void init_builtins(void) {
 	iigs_ror = STRINGN("__builtin_ror");
 
 	iigs_popcount = STRINGN("__builtin_popcount");
+	iigs_tool_error = STRINGN("__builtin_tool_error");
+
 }
 
 static int is_builtin(Node p, const char *fx) {
@@ -136,6 +139,8 @@ reg: CALLP4(address) {
 	lda >$000002,x
 	sta %c+2
 } is_builtin(a, iigs_va_arg)
+
+# todo -- CALLB.
 
 # void __builtin_trap(void);
 stmt: CALLV(address) {
@@ -237,3 +242,14 @@ reg: CALLU2(address) {
 	stx %c
 @fini:
 } is_builtin(a, iigs_popcount)
+
+
+
+# unsigned __builtin_tool_error(void);
+reg: CALLU2(address) {
+	; %0
+	lda >_toolErr
+	sta %c
+} is_builtin(a, iigs_tool_error)
+
+
