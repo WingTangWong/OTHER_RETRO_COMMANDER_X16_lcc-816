@@ -139,6 +139,16 @@ reg: ADDP4(reg, reg) {
 } 7
 
 
+reg: ADDP4(reg, address) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
 
 # combine the conversion and the addition.
 reg: ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)) {
@@ -148,6 +158,16 @@ reg: ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)) {
     sta %c
     lda #0
     adc %1+2
+    sta %c+2
+} 7
+
+reg: ADDP4(CVUU4(INDIRU2(vregp)), address) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda #0
+    adc #^%1
     sta %c+2
 } 7
 
@@ -178,3 +198,23 @@ reg: ADDP4(CVII4(const_negative), reg) {
     sbc #-1
     sta %c+2
 } 7
+
+
+# combine shift and add
+# int address[] = {...}
+# int n;
+# address[n]
+reg: ADDP4(CVII4(LSHI2(INDIRI2(vregp), const_1)), address) {
+    ldx #0
+    lda %0
+    asl
+    bcc @ok
+    dex
+    clc
+@ok
+    adc #%2
+    sta %c
+    txa
+    adc #^%2
+    sta %c+2
+} 11

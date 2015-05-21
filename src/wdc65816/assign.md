@@ -15,36 +15,63 @@ stmt: ASGNU1(vregp, rc) {
     sta %0
 } 4
 
+# ASGNU1(ADDRGP4(mon), CNSTU1(0)
+
+stmt: ASGNU1(address, rc) {
+    lda %1
+    sep #$20
+    sta >%0
+    rep #$20
+} 4
+
+stmt: ASGNI1(address, rc) {
+    lda %1
+    sep #$20
+    sta >%0
+    rep #$20
+} 4
+
+
+vregp_or_address: VREGP "%a" 0
+vregp_or_address: ADDRLP4 "%a" 0
+vregp_or_address: ADDRFP4 "%a" 0
+
+# check for small memory model?
+vregp_or_address: ADDRGP4 ">%a" 0
+vregp_or_address: ADDRGP4 "|%a" LBURG_MAX
+
+
 #16-bit
 
-stmt: ASGNU2(vregp, rc) {
+stmt: ASGNU2(vregp_or_address, rc) {
     lda %1
     sta %0
 } 2
 
-stmt: ASGNI2(vregp, rc) {
+stmt: ASGNI2(vregp_or_address, rc) {
     lda %1
     sta %0
 } 2
+
 
 # 32-bits
 # need separate const vs reg for high-word
 
-stmt: ASGNP4(vregp, const) {
+stmt: ASGNP4(vregp_or_address, const) {
     lda #%1
     sta %0
     lda #^%1
     sta %0+2
 } 4
 
-stmt: ASGNU4(vregp, const) {
+stmt: ASGNU4(vregp_or_address, const) {
     lda #%1
     sta %0
     lda #^%1
     sta %0+2
 } 4
 
-stmt: ASGNI4(vregp, const) {
+stmt: ASGNI4(vregp_or_address, const) {
     lda #%1
     sta %0
     lda #^%1
@@ -52,7 +79,7 @@ stmt: ASGNI4(vregp, const) {
 } 4
 
 
-stmt: ASGNP4(vregp, reg) {
+stmt: ASGNP4(vregp_or_address, reg) {
     lda %1
     sta %0
     lda %1+2
@@ -60,21 +87,21 @@ stmt: ASGNP4(vregp, reg) {
 } 4
 
 
-stmt: ASGNU4(vregp, reg) {
+stmt: ASGNU4(vregp_or_address, reg) {
     lda %1
     sta %0
     lda %1+2
     sta %0+2
 } 4
 
-stmt: ASGNI4(vregp, reg) {
+stmt: ASGNI4(vregp_or_address, reg) {
     lda %1
     sta %0
     lda %1+2
     sta %0+2
 } 4
 
-stmt: ASGNP4(vregp, reg) {
+stmt: ASGNP4(vregp_or_address, reg) {
     lda %1
     sta %0
     lda %1+2
@@ -112,15 +139,6 @@ stmt: ASGNI2(vregp, const_1) {
     inc %0
 } 2
 
-stmt: ASGNU2(addressDP, reg) {
-    lda %1
-    sta %0
-} 2
-
-stmt: ASGNI2(addressDP, reg) {
-    lda %1
-    sta %0
-} 2
 
 # indirection...
 

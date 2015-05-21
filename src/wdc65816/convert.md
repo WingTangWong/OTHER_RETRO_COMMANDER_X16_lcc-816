@@ -199,3 +199,22 @@ reg: CVII4(CVII2(INDIRI1(vregp))) ^{
 reg: CVII4(CVUI2(INDIRU1(vregp))) ^{
 	zero_extend_32(p, kids, nts, 1);
 } 4
+
+
+#
+# int bleh[] = {..}
+# int n
+# bleh[n]
+reg: CVII4(LSHI2(INDIRI2(vregp), const_1)) {
+        ldx #0
+        lda %0
+        asl 
+        bcc @ok
+        dex
+@ok
+        sta %c
+        stx %c+2
+} 8
+
+
+
