@@ -150,6 +150,71 @@ reg: ADDP4(reg, address) {
 } 7
 
 
+reg: ADDI4(reg, const) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+reg: ADDI4(reg, reg) {
+    lda %0
+    clc
+    adc %1
+    sta %c
+    lda %0+2
+    adc %1+2
+    sta %c+2
+} 7
+
+
+reg: ADDI4(reg, address) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+
+reg: ADDU4(reg, const) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+reg: ADDU4(reg, reg) {
+    lda %0
+    clc
+    adc %1
+    sta %c
+    lda %0+2
+    adc %1+2
+    sta %c+2
+} 7
+
+
+reg: ADDU4(reg, address) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+
+
 # combine the conversion and the addition.
 reg: ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)) {
     lda %0
@@ -218,3 +283,37 @@ reg: ADDP4(CVII4(LSHI2(INDIRI2(vregp), const_1)), address) {
     adc #^%2
     sta %c+2
 } 11
+
+
+
+
+reg: ADDI4(reg, const) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
+
+reg: ADDI4(reg, reg) {
+    lda %0
+    clc
+    adc %1
+    sta %c
+    lda %0+2
+    adc %1+2
+    sta %c+2
+} 7
+
+
+reg: ADDI4(reg, address) {
+    lda %0
+    clc
+    adc #%1
+    sta %c
+    lda %0+2
+    adc #^%1
+    sta %c+2
+} 7
