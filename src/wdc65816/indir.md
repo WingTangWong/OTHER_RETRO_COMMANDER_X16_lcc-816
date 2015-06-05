@@ -1,26 +1,27 @@
 #pragma mark indirection
 # need flag for short/long addressing...
 
-reg: INDIRU2(address) {
-	lda |%0
+reg: INDIRU2(address_with_modifier) {
+	lda %0
 	sta %c
 } 2
 
-reg: INDIRI2(address) {
-    lda |%0
+reg: INDIRI2(address_with_modifier) {
+    lda %0
     sta %c
 } 2
 
 
-reg: INDIRU2(address) {
-	lda >%0
-	sta %c
-} 3
+#reg: INDIRU2(address) {
+#    lda >%0
+#    sta %c
+#} 3
 
-reg: INDIRI2(address) {
-    lda >%0
-    sta %c
-} 3
+#reg: INDIRI2(address) {
+#    lda >%0
+#    sta %c
+#} 3
+
 
 reg: INDIRU2(addressDP) {
     lda <%0
@@ -106,33 +107,20 @@ reg: INDIRP4(ADDP4(reg, const_16_bit_minus_4)) {
 
 #pragma mark - 8-bit
 
-reg: INDIRU1(address) {
+reg: INDIRU1(address_with_modifier) {
     sep #$20
-    lda |%0
+    lda %0
     sta %c
     rep #$20
 } 4
 
-reg: INDIRI1(address) {
+reg: INDIRI1(address_with_modifier) {
     sep #$20
-    lda |%0
+    lda %0
     sta %c
     rep #$20
 } 4
 
-reg: INDIRU1(address) {
-    sep #$20
-    lda >%0
-    rep #$20
-    sta %c
-} 4+1
-
-reg: INDIRI1(address) {
-    sep #$20
-    lda >%0
-    rep #$20
-    sta %c
-} 4+1
 
 reg: INDIRU1(const) {
     sep #$20
@@ -182,22 +170,22 @@ reg: INDIRI1(ADDP4(reg, const_16_bit)) {
 
 
 # static char buffer[]; x = buffer[uint16_t]
-reg: INDIRU1(ADDP4(CVUU4(INDIRU2(vregp)), address)) {
+reg: INDIRU1(ADDP4(CVUU4(INDIRU2(vregp)), address_with_modifier)) {
     ldx %0
     sep #$20
-    lda >%1,x
+    lda %1,x
     rep #$20
     sta %c
 } 5
 
 
 # could wrap in sep #$30 to use 8-bit x.
-reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address)) {
+reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier)) {
     lda %0
     and #$ff
     tax
     sep #$20
-    lda >%1,x
+    lda %1,x
     rep #$20
     sta %c 
 } 5
