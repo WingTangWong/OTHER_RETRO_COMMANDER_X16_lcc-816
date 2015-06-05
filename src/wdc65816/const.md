@@ -127,3 +127,5 @@ const: CNSTI4 "%a"
 const: CNSTI8 "%a" 
 
 const: CNSTP4 "%a"
+const: ADDRGP4 "%a"
+

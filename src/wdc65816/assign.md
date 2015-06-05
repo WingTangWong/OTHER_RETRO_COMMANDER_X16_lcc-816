@@ -1,6 +1,7 @@
 
 # 8-bits
 
+# todo -- if vregp is %v or %p, must use 8-bit store.
 stmt: ASGNI1(vregp, rc) {
     ;sep #$20
     lda %1
@@ -17,61 +18,65 @@ stmt: ASGNU1(vregp, rc) {
 
 # ASGNU1(ADDRGP4(mon), CNSTU1(0)
 
-stmt: ASGNU1(address, rc) {
+stmt: ASGNU1(address_with_modifier, rc) {
     lda %1
     sep #$20
-    sta >%0
+    sta %0
     rep #$20
 } 4
 
-stmt: ASGNI1(address, rc) {
+stmt: ASGNI1(address_with_modifier, rc) {
     lda %1
     sep #$20
-    sta >%0
+    sta %0
     rep #$20
 } 4
 
-
-vregp_or_address: VREGP "%a" 0
-vregp_or_address: ADDRLP4 "%a" 0
-vregp_or_address: ADDRFP4 "%a" 0
-
-# check for small memory model?
-vregp_or_address: ADDRGP4 ">%a" 0
-vregp_or_address: ADDRGP4 "|%a" LBURG_MAX
 
 
 #16-bit
 
-stmt: ASGNU2(vregp_or_address, rc) {
+stmt: ASGNU2(address_with_modifier, rc) {
     lda %1
     sta %0
 } 2
 
-stmt: ASGNI2(vregp_or_address, rc) {
+stmt: ASGNI2(address_with_modifier, rc) {
     lda %1
     sta %0
 } 2
+
+stmt: ASGNU2(vregp, rc) {
+    lda %1
+    sta %0
+} 2
+
+stmt: ASGNI2(vregp, rc) {
+    lda %1
+    sta %0
+} 2
+
+
 
 
 # 32-bits
 # need separate const vs reg for high-word
 
-stmt: ASGNP4(vregp_or_address, const) {
+stmt: ASGNP4(vregp, const) {
     lda #%1
     sta %0
     lda #^%1
     sta %0+2
 } 4
 
-stmt: ASGNU4(vregp_or_address, const) {
+stmt: ASGNU4(vregp, const) {
     lda #%1
     sta %0
     lda #^%1
     sta %0+2
 } 4
 
-stmt: ASGNI4(vregp_or_address, const) {
+stmt: ASGNI4(vregp, const) {
     lda #%1
     sta %0
     lda #^%1
@@ -79,7 +84,7 @@ stmt: ASGNI4(vregp_or_address, const) {
 } 4
 
 
-stmt: ASGNP4(vregp_or_address, reg) {
+stmt: ASGNP4(vregp, reg) {
     lda %1
     sta %0
     lda %1+2
@@ -87,32 +92,73 @@ stmt: ASGNP4(vregp_or_address, reg) {
 } 4
 
 
-stmt: ASGNU4(vregp_or_address, reg) {
+stmt: ASGNU4(vregp, reg) {
     lda %1
     sta %0
     lda %1+2
     sta %0+2
 } 4
 
-stmt: ASGNI4(vregp_or_address, reg) {
+stmt: ASGNI4(vregp, reg) {
     lda %1
     sta %0
     lda %1+2
     sta %0+2
 } 4
 
-stmt: ASGNP4(vregp_or_address, reg) {
+
+stmt: ASGNP4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNU4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNI4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+
+stmt: ASGNP4(address_with_modifier, reg) {
     lda %1
     sta %0
     lda %1+2
     sta %0+2
 } 4
+
+
+stmt: ASGNU4(address_with_modifier, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+stmt: ASGNI4(address_with_modifier, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+
+
 
 
 
 # 0-optimizations.
 
-
+# todo -- need to rep/sep if vregp is struct or array.
 stmt: ASGNU1(vregp, const_0) {
     stz %0
 } 1
@@ -129,15 +175,27 @@ stmt: ASGNI2(vregp, const_0) {
     stz %0
 } 1
 
-stmt: ASGNU2(vregp, const_1) {
-    stz %0
-    inc %0
-} 2
+stmt: ASGNU2(address, const_0) {
+    stz |%0
+} short_mm_only(1)
 
-stmt: ASGNI2(vregp, const_1) {
-    stz %0
-    inc %0
-} 2
+stmt: ASGNI2(address, const_0) {
+    stz |%0
+} short_mm_only(1)
+
+
+
+#stmt: ASGNU2(vregp, const_1) {
+#    stz %0
+#    inc %0
+#} 2
+
+#stmt: ASGNI2(vregp, const_1) {
+#    stz %0
+#    inc %0
+#} 2
+
+
 
 
 # indirection...
@@ -236,24 +294,32 @@ stmt: ASGNI1(ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)), rc) {
 } 5+1
 
 
-
-# static char buffer; buffer[uint16_t | uint8_t]
-stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), address), rc) {
+# see also indir.
+# static char buffer; buffer[uint16_t | uint8_t] = rc
+stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), address_with_modifier), rc) {
     ldx %0
     lda %2
     sep #$20
-    sta >%1,x
+    sta %1,x
     rep #$20
 } 5
 
-stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address), rc) {
+stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier), rc) {
     lda %0
     and #$ff
     tax
     lda %2
     sep #$20
-    sta >%1,x
+    sta %1,x
     rep #$20
 } 6
 
+# small-memory model write
+stmt: ASGNU1(ADDP4(CVII4(INDIRI2(vregp)), address), rc) {
+    ldx %0
+    lda %2
+    sep #$20
+    sta |%1,x
+    rep #$20
+} short_mm_only(5)
 
