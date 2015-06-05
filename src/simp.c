@@ -332,12 +332,14 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			&& (r->op == CNST+I && (r->u.v.i > 32767 || r->u.v.i < -32768)
 			||  r->op == CNST+U && r->u.v.u > 65536))
 				break;
+
 			if (IR->address
 			&&  isaddrop(l->op)
 			&& (r->op == CNST+I && r->u.v.i <= longtype->u.sym->u.limits.max.i
 			    && r->u.v.i >= longtype->u.sym->u.limits.min.i
 			||  r->op == CNST+U && r->u.v.u <= longtype->u.sym->u.limits.max.i))
 				return addrtree(l, cast(r, longtype)->u.v.i, ty);
+
 			if (IR->address
 			&&  l->op == ADD+P && isaddrop(l->kids[1]->op)
 			&& (r->op == CNST+I && r->u.v.i <= longtype->u.sym->u.limits.max.i
@@ -345,25 +347,61 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			||  r->op == CNST+U && r->u.v.u <= longtype->u.sym->u.limits.max.i))
 				return simplify(ADD+P, ty, l->kids[0],
 					addrtree(l->kids[1], cast(r, longtype)->u.v.i, ty));
-			if ((l->op == ADD+I || l->op == SUB+I)
-			&& l->kids[1]->op == CNST+I && isaddrop(r->op))
+
+			/* kws -- add ADD+U / SUB+U support. */
+			if ((l->op == ADD+I || l->op == SUB+I || l->op == ADD+U || l->op == SUB+U)
+			&& generic(l->kids[1]->op) == CNST && isaddrop(r->op))
 				return simplify(ADD+P, ty, l->kids[0],
 					simplify(generic(l->op)+P, ty, r, l->kids[1]));
+
 			if (l->op == ADD+P && generic(l->kids[1]->op) == CNST
 			&& generic(r->op) == CNST)
 				return simplify(ADD+P, ty, l->kids[0],
 					simplify(ADD, l->kids[1]->type, l->kids[1], r));
+
 			if (l->op == ADD+I && generic(l->kids[1]->op) == CNST
 			&&  r->op == ADD+P && generic(r->kids[1]->op) == CNST)
 				return simplify(ADD+P, ty, l->kids[0],
 					simplify(ADD+P, ty, r->kids[0],
 					simplify(ADD, r->kids[1]->type, l->kids[1], r->kids[1])));
+
 			if (l->op == RIGHT && l->kids[1])
 				return tree(RIGHT, ty, l->kids[0],
 					simplify(ADD+P, ty, l->kids[1], r));
+
 			else if (l->op == RIGHT && l->kids[0])
 				return tree(RIGHT, ty,
 					simplify(ADD+P, ty, l->kids[0], r), NULL);
+
+			/*
+			 * kws/65816 -- above logic, but there's an extra CVU/I from 16-bit
+			 * to 32-bit pointer
+			 */
+			// unsigned.
+			if (isaddrop(r->op) && generic(l->op) == CVU) {
+				Tree ll = l->kids[0];
+				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
+
+					Tree right, left;
+					left = cast(ll->kids[0],unsignedlong);
+					right = simplify(generic(ll->op)+P, ty, r, ll->kids[1]);
+					return simplify(ADD+P, ty, left, right);
+				}
+			}
+			// signed.
+			if (isaddrop(r->op) && generic(l->op) == CVI) {
+				Tree ll = l->kids[0];
+				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
+
+					Tree right, left;
+					left = cast(ll->kids[0],longtype);
+					right = simplify(generic(ll->op)+P, ty, r, ll->kids[1]);
+					return simplify(ADD+P, ty, left, right);
+				}
+			}
+
+
+
 			break;
 
 		case ADD+F:
