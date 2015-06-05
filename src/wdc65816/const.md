@@ -81,6 +81,11 @@ const_15: CNSTI2 "15" range(a, 15, 15)
 const_15: CNSTI4 "15" range(a, 15, 15)
 const_15: CNSTI8 "15" range(a, 15, 15)
 
+const_16: CNSTI1 "16" range(a, 16, 16)
+const_16: CNSTI2 "16" range(a, 16, 16)
+const_16: CNSTI4 "16" range(a, 16, 16)
+const_16: CNSTI8 "16" range(a, 16, 16)
+
 
 const_16_bit: CNSTU1 "%a" range(a, 0, 0xffff)
 const_16_bit: CNSTU2 "%a" range(a, 0, 0xffff)

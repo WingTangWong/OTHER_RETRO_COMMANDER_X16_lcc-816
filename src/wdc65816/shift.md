@@ -39,14 +39,14 @@ reg: RSHU2(reg, const) ^{
 reg: RSHU2(rc, reg) {
     lda %0
     ldx %1
-    jsl ~rshu2
+    jsl __rshu2
     sta %c
 } 20
 
 reg: RSHI2(rc, reg) {
     lda %0
     ldx %1
-    jsl ~rshi2
+    jsl __rshi2
     sta %c
 } 20
 
@@ -162,3 +162,20 @@ reg: LSHI2(rc, reg) {
     jsl ~lshi2
     sta %c
 } 20
+
+
+#pragma mark - 32-bit
+
+
+reg: RSHI4(reg, const_16) {
+    ldx #0
+    lda %0+2
+    cmp #0
+    bpl @ok
+    dex
+@ok:
+    sta %c
+    stx %c+2
+} 7
+
+
