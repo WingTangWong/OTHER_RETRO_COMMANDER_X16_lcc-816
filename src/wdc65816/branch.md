@@ -97,3 +97,12 @@ stmt: GEI2(rc, rc) {
 } 3
 
 
+#pragma mark - 32 bit
+stmt: NEU4(rc, const_0) {
+    lda %0
+    ora %0+2
+    cmp %1
+    bne %a
+} 5
+
+
