@@ -111,3 +111,22 @@ reg: MODI2(rc, rc) {
     jsl __modi2
     sta %c
 } 20
+
+
+
+
+# 32-bit
+
+reg: DIVI4(rc, rc) {
+    tsx
+    phx
+    pei %0
+    pei %0+2
+    pei %1
+    pei %1+2
+    jsl __divi4
+    sta %c
+    stx %c+2
+    lda 9,s
+    tcs
+} 40
