@@ -23,27 +23,27 @@ reg: INDIRI2(address_with_modifier) {
 #} 3
 
 
-reg: INDIRU2(addressDP) {
-    lda <%0
-    sta %c
-} 2
+#reg: INDIRU2(addressDP) {
+#    lda <%0
+#    sta %c
+#} 2
 
-reg: INDIRI2(addressDP) {
-    lda <%0
-    sta %c
-} 2
+#reg: INDIRI2(addressDP) {
+#    lda <%0
+#    sta %c
+#} 2
 
 # *(unsigned *)0x123456
 
-reg: INDIRU2(const) {
-    lda >%0
-    sta %c
-} 2
+# reg: INDIRU2(const) {
+#     lda >%0
+#     sta %c
+# } 2# 
 
-reg: INDIRI2(const) {
-    lda >%0
-    sta %c
-} 2
+# reg: INDIRI2(const) {
+#     lda >%0
+#     sta %c
+# } 2
 
 
 reg: INDIRU2(reg) {
@@ -122,19 +122,19 @@ reg: INDIRI1(address_with_modifier) {
 } 4
 
 
-reg: INDIRU1(const) {
-    sep #$20
-    lda >%0
-    rep #$20
-    sta %c
-} 4+1
+#reg: INDIRU1(const) {
+#    sep #$20
+#    lda >%0
+#    rep #$20
+#    sta %c
+#} 4+1
 
-reg: INDIRI1(const) {
-    sep #$20
-    lda >%0
-    rep #$20
-    sta %c
-} 4+1
+#reg: INDIRI1(const) {
+#    sep #$20
+#    lda >%0
+#    rep #$20
+#    sta %c
+#} 4+1
 
 
 reg: INDIRU1(reg) {
@@ -170,6 +170,7 @@ reg: INDIRI1(ADDP4(reg, const_16_bit)) {
 
 
 # static char buffer[]; x = buffer[uint16_t]
+# safe regardless of memory model
 reg: INDIRU1(ADDP4(CVUU4(INDIRU2(vregp)), address_with_modifier)) {
     ldx %0
     sep #$20
@@ -180,6 +181,7 @@ reg: INDIRU1(ADDP4(CVUU4(INDIRU2(vregp)), address_with_modifier)) {
 
 
 # could wrap in sep #$30 to use 8-bit x.
+# safe regardless of memory model
 reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier)) {
     lda %0
     and #$ff
@@ -189,3 +191,18 @@ reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier)) {
     rep #$20
     sta %c 
 } 5
+
+# small-memory model read
+# int x; __ctype[x+1]
+# can't use address_with_modifier -- could include >0xconstant.
+reg: INDIRU1(ADDP4(CVII4(INDIRI2(vregp)), address)) {
+    ldx %0
+    sep #$20
+    lda |%1,x
+    rep #$20
+    sta %c
+} short_mm_only(5)
+
+
+
+
