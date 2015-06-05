@@ -125,7 +125,7 @@ $Bx86linux.c:	$Blburg$E src/x86linux.md; $Blburg src/x86linux.md $@
 
 DEP816=add-sub.md arg.md assign.md bitops.md builtin.md call.md\
 const.md indir.md load.md multiply.md shift.md branch.md convert.md\
-return.md struct.md
+return.md struct.md memop.md
 
 $Bwdc65816.c:	$Blburg$E src/wdc65816.md $(DEP816:%=src/wdc65816/%)
 	$Blburg src/wdc65816.md $@
