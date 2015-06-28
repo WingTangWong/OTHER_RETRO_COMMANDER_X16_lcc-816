@@ -173,7 +173,7 @@ reg: RSHI4(reg, const_16) {
     cmp #0
     bpl @ok
     dex
-@ok:
+@ok
     sta %c
     stx %c+2
 } 7

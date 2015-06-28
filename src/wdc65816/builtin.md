@@ -218,7 +218,7 @@ reg: CALLU2(address) {
 	lsr
 	bcc @store
 	ora #$8000
-@store:
+@store
 	sta %c
 } is_builtin(a, iigs_ror)
 # ora.cs #$8000 ?
@@ -233,14 +233,14 @@ reg: CALLU2(address) {
 	sta %c ; scratch
 	cmp #0
 	beq @fini
-@loop:
+@loop
 	inx
 	dec
 	eor %c
 	sta %c
 	bne @loop
 	stx %c
-@fini:
+@fini
 } is_builtin(a, iigs_popcount)
 
 

@@ -26,7 +26,7 @@ void copy_struct(Node p, Node *kids, short *nts) {
 
 	EMIT(
 			_("ldx #0")
-	__("@loop:")
+	__("@loop")
 			_("lda %1,x")
 			_("sta %0,x")
 			_("inx")
@@ -65,7 +65,7 @@ void copy_struct_indirect(Node p, Node *kids, short *nts) {
 
 	EMIT(
 			_("ldx #0")
-	__("@loop:")
+	__("@loop")
 			_("txy")
 			_("lda %1,x")
 			_("sta [%0],y")
@@ -111,7 +111,7 @@ stmt: ARGB(INDIRB(vregp)) {
 	; argb
 	ldx #0
 
-@loop:
+@loop
 	lda %0+%a-2,x
 	pha
 	inx
