@@ -1,5 +1,5 @@
 #include "c.h"
-
+#include <ctype.h>
 static char rcsid[] = "$Id$";
 
 #define readsreg(p) \
@@ -367,14 +367,13 @@ void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
 	for ( ; *fmt; fmt++) {
 
 		/* @[a-z] generates a unique local label. */
-		if (*fmt == '@') {
-			char label = fmt[1];
-			if (label >= 'a' && label <= 'z') {
-				maxlabel = 1;
-				print("@%d$%c", nextlabel, label);
-				fmt++;
-				continue;
-			}
+		if (*fmt == '@' && isalpha(fmt[1])) {
+			putchar(*fmt++);
+			while(isalpha(*fmt))
+				putchar(*fmt++);
+			maxlabel = 1;
+			print(".%d", nextlabel);
+			//continue;
 		}
 
 		if (*fmt != '%')
@@ -431,14 +430,13 @@ unsigned emitasm(Node p, int nt) {
 		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++) {
 
 			/* @[a-z] generates a unique local label. */
-			if (*fmt == '@') {
-				char label = fmt[1];
-				if (label >= 'a' && label <= 'z') {
-					maxlabel = 1;
-					print("@%d$%c", nextlabel, label);
-					fmt++;
-					continue;
-				}
+			if (*fmt == '@' && isalpha(fmt[1])) {
+				putchar(*fmt++);
+				while(isalpha(*fmt))
+					putchar(*fmt++);
+				maxlabel = 1;
+				print(".%d", nextlabel);
+				//continue;
 			}
 
 
