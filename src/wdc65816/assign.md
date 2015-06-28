@@ -226,6 +226,24 @@ stmt: ASGNU1(reg, rc) {
 } 4+1
 
 
+stmt: ASGNI4(reg, reg) {
+    lda %1
+    sta [%0]
+    ldy #2
+    lda %1+2
+    sta [%0],y
+} 5
+
+stmt: ASGNI4(reg, const) {
+    lda #%1
+    sta [%0]
+    ldy #2
+    lda #^%1
+    sta [%0],y
+} 5
+
+
+
 # y-indirection.
 
 stmt: ASGNU2(ADDP4(reg, const_16_bit), rc) {
@@ -322,4 +340,5 @@ stmt: ASGNU1(ADDP4(CVII4(INDIRI2(vregp)), address), rc) {
     sta |%1,x
     rep #$20
 } short_mm_only(5)
+
 
