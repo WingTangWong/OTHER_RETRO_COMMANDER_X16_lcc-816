@@ -256,11 +256,11 @@ reg: ADDP4(CVII4(INDIRI2(vregp)), INDIRP4(vregp)) {
 
 reg: ADDP4(CVII4(const_negative), reg) {
     lda %1
-    sec
-    sbc #%0
+    clc
+    adc #%0
     sta %c
     lda %1+2
-    sbc #-1
+    adc #-1
     sta %c+2
 } 7
 
@@ -283,7 +283,6 @@ reg: ADDP4(CVII4(LSHI2(INDIRI2(vregp), const_1)), address) {
     adc #^%2
     sta %c+2
 } 11
-
 
 
 
