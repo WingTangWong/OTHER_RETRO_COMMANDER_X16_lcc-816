@@ -77,7 +77,7 @@ reg: BCOMI2(reg) {
 reg: NEGI2(reg) {
     lda %0
     eor #$ffff
-    inc a
+    inc
     sta %c
 } 4
 

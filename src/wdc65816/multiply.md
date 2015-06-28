@@ -24,7 +24,7 @@ reg: MULI2(rc, rc) {
 #
 reg: MULU2(reg, const_3) {
     lda %0
-    asl a
+    asl
     clc
     adc %0
     sta %c
@@ -32,7 +32,7 @@ reg: MULU2(reg, const_3) {
 
 reg: MULU2(const_3, reg) {
     lda %1
-    asl a
+    asl
     clc
     adc %1
     sta %c
@@ -40,8 +40,8 @@ reg: MULU2(const_3, reg) {
 
 reg: MULU2(reg, const_5) {
     lda %0
-    asl a
-    asl a
+    asl
+    asl
     clc
     adc %0
     sta %c
@@ -49,8 +49,8 @@ reg: MULU2(reg, const_5) {
 
 reg: MULU2(const_5, reg) {
     lda %1
-    asl a
-    asl a
+    asl
+    asl
     clc
     adc %1
     sta %c
@@ -58,21 +58,21 @@ reg: MULU2(const_5, reg) {
 
 reg: MULU2(reg, const_10) {
     lda %0
-    asl a
-    asl a
+    asl
+    asl
     clc
     adc %0
-    asl a
+    asl
     sta %c
 } 7
 
 reg: MULU2(const_10, reg) {
     lda %1
-    asl a
-    asl a
+    asl
+    asl
     clc
     adc %1
-    asl a
+    asl
     sta %c
 } 7
 

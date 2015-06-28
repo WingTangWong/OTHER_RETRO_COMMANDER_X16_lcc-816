@@ -29,7 +29,7 @@ reg: RSHU2(reg, const) ^{
     }
 
     while (value) {
-        EMIT(_("lsr a"));
+        EMIT(_("lsr"));
         value--;
     }
     EMIT(_("sta %c"));
@@ -83,9 +83,9 @@ reg: LSHU2(reg, const) ^{
     if (value == 15) {
         // move bit 1 to bit  16.
         EMIT(
-            _("lsr a")
+            _("lsr")
             _("lda #0")
-            _("ror a")
+            _("ror")
             _("sta %c")
         );
         return;
@@ -102,7 +102,7 @@ reg: LSHU2(reg, const) ^{
     }
 
     while (value) {
-        EMIT(_("asl a"));
+        EMIT(_("asl"));
         value--;
     }
     EMIT(_("sta %c"));
@@ -123,9 +123,9 @@ reg: LSHI2(reg, const) ^{
     if (value == 15) {
         // move bit 1 to bit  16.
         EMIT(
-            _("lsr a")
+            _("lsr")
             _("lda #0")
-            _("ror a")
+            _("ror")
             _("sta %c")
         );
         return;
@@ -142,7 +142,7 @@ reg: LSHI2(reg, const) ^{
     }
 
     while (value) {
-        EMIT(_("asl a"));
+        EMIT(_("asl"));
         value--;
     }
     EMIT(_("sta %c"));
