@@ -5,7 +5,7 @@
 #
 
 stmt: JUMPV(address) {
-    bra %0
+    __bra %0
 } 1
 
 
@@ -15,54 +15,53 @@ stmt: JUMPV(address) {
 stmt: EQI2(rc, rc) {
     lda %0
     cmp %1
-    beq %a
+    __beq %a
 } 3
 
 
 stmt: EQU2(rc, rc) {
     lda %0
     cmp %1
-    beq %a
+    __beq %a
 } 3
 
 stmt: NEI2(rc, rc) {
     lda %0
     cmp %1
-    bne %a
+    __bne %a
 } 3
 
 stmt: NEU2(rc, rc) {
     lda %0
     cmp %1
-    bne %a
-} 3
+    __bne %a
+} 4
 
 
 stmt: GEU2(rc, rc) {
     lda %0
     cmp %1
-    bge %a
-} 3
+    __buge %a
+} 4
 
 stmt: LEU2(rc, rc) {
     lda %0
     cmp %1
-    blt %a
-    beq %a
+    __bule %a
 } 4
 
-# reversed order
+# reversed order ?
 stmt: GTU2(rc, rc) {
-    lda %1
-    cmp %0
-    blt %a
-} 3
+    lda %0
+    cmp %1
+    __bugt %a
+} 4
 
 stmt: LTU2(rc, rc) {
     lda %0
     cmp %1
-    blt %a
-} 3
+    __bult %a
+} 4
 
 
 # signed - {0--0x7fff} > {0x8000-0xffff}
@@ -70,39 +69,61 @@ stmt: LTU2(rc, rc) {
 
 # http://www.6502.org/tutorials/compare_instructions.html
 stmt: LTI2(rc, rc) {
-	lda %0
-	cmp %1
-	bmi %a
-} 3
+    lda %0
+    sec
+    sbc %1
+    __bslt %a
+} 10
 
 stmt: LEI2(rc, rc) {
-	lda %0
-	cmp %1
-	bmi %a
-	beq %a
-} 4
+    lda %0
+    sec
+    sbc %1
+    __bsle %a
+} 10
 
 stmt: GTI2(rc, rc) {
-	lda %0
-	cmp %1
-	beq @ok
-	bpl %a
-@ok
-} 4
+    lda %0
+    sec
+    sbc %1
+    __bsgt %a
+} 10
 
 stmt: GEI2(rc, rc) {
-	lda %0
-	cmp %1
-	bpl %a
-} 3
+    lda %0
+    sec
+    sbc %1
+    __bsge %a
+} 10
 
 
 #pragma mark - 32 bit
+# let the optimizer remove cmp #0?
 stmt: NEU4(rc, const_0) {
     lda %0
     ora %0+2
-    cmp %1
-    bne %a
+    cmp #%1
+    __bne %a
+} 5
+
+stmt: NEI4(rc, const_0) {
+    lda %0
+    ora %0+2
+    cmp #%1
+    __bne %a
 } 5
 
 
+stmt: EQU4(rc, const_0) {
+    lda %0
+    ora %0+2
+    cmp #%1
+    __beq %a
+} 5
+
+stmt: EQI4(rc, const_0) {
+    lda %0
+    ora %0+2
+    cmp #%1
+    __beq %a
+} 5
