@@ -450,6 +450,7 @@ static void funcattr(FunctionAttr *fa, int sentinel) {
 	static char *id_near = NULL;
 	static char *id_databank = NULL;
 	static char *id_inline = NULL;
+	static char *id_debug = NULL;
 
 	//static char *id_function_vector = NULL;
 	static char *id_segment = NULL;
@@ -464,6 +465,7 @@ static void funcattr(FunctionAttr *fa, int sentinel) {
 
 		id_inline = STRINGN("inline");
 		id_segment = STRINGN("segment");
+		id_debug = STRINGN("debug");
 
 		init = 1;
 	}
@@ -496,6 +498,13 @@ static void funcattr(FunctionAttr *fa, int sentinel) {
 			t = gettok();
 			return;
 		}
+
+		if (token == id_debug) {
+			fa->debug = 1;
+			t = gettok();
+			return;
+		}
+
 
 		// rts/rtl/rti?
 		if (token == id_near) {

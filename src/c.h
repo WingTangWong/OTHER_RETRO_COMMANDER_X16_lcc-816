@@ -333,6 +333,7 @@ struct functionattr {
 	unsigned noreturn:1;
 	unsigned near:1;
 	unsigned databank:1;
+	unsigned debug:1;
 
 	unsigned function_vector;
 	unsigned registerX;
