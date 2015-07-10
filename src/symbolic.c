@@ -534,11 +534,11 @@ Interface symbolic16IR = {
 	1, 1, 0,	/* char */
 	2, 2, 0,	/* short */
 	2, 2, 0,	/* int */
-	4, 4, 0,	/* long */
-	8, 8, 0,	/* long long */
-	4, 4, 1,	/* float */
-	8, 8, 1,	/* double */
-	10, 10, 1,	/* long double */
+	4, 2, 0,	/* long */
+	8, 2, 0,	/* long long */
+	4, 2, 1,	/* float */
+	8, 2, 1,	/* double */
+	10, 2, 1,	/* long double */
 	4, 4, 0,	/* T* */
 	0, 1, 0,	/* struct */
 	1,		/* little_endian */
