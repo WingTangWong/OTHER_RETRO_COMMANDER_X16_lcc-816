@@ -85,39 +85,45 @@ reg: INDIRI2(ADDP4(reg, const_16_bit)) {
 } 3+2
 
 #pragma mark - 32 bit
-
+# could be %t0 = *%t0, so don't update %c until the end.
 reg: INDIRP4(reg) {
     lda [%0]
-    sta %c
+    tax
     ldy #2
     lda [%0],y
+    stx %c
     sta %c+2
 } 5
 
 reg: INDIRU4(reg) {
     lda [%0]
-    sta %c
+    tax
     ldy #2
     lda [%0],y
+    stx %c
     sta %c+2
 } 5
 
 reg: INDIRI4(reg) {
     lda [%0]
-    sta %c
+    tax
     ldy #2
     lda [%0],y
+    stx %c
     sta %c+2
 } 5
+
+
 
 
 # ASGNP4(VREGP(s), INDIRP4(ADDP4(reg, CNSTI4(4))))
 reg: INDIRP4(ADDP4(reg, const_16_bit_minus_4)) {
     ldy #%1
     lda [%0],y
-    sta %c
+    tax
     ldy #%1+2
     lda [%0],y
+    stx %c
     sta %c+2
 } 6
 
