@@ -67,6 +67,29 @@ stmt: LTU2(rc, rc) {
 # signed - {0--0x7fff} > {0x8000-0xffff}
 # 
 
+stmt: LTI2(rc, const_positive) {
+    lda %0
+    cmp #0
+    __bmi %a
+    cmp #%1
+    __bcc %a
+} 5
+
+stmt: LTI2(rc, const_0) {
+    lda %0
+    cmp #0
+    __bmi %a
+} 3
+
+stmt: LEI2(rc, const_positive) {
+    lda %0
+    cmp #0
+    __bmi %a
+    cmp #%1+1
+    __bcc %a
+} 5
+
+
 # http://www.6502.org/tutorials/compare_instructions.html
 stmt: LTI2(rc, rc) {
     lda %0
@@ -74,6 +97,8 @@ stmt: LTI2(rc, rc) {
     sbc %1
     __bslt %a
 } 10
+
+
 
 stmt: LEI2(rc, rc) {
     lda %0
@@ -89,12 +114,19 @@ stmt: GTI2(rc, rc) {
     __bsgt %a
 } 10
 
+
 stmt: GEI2(rc, rc) {
     lda %0
     sec
     sbc %1
     __bsge %a
 } 10
+
+stmt: GEI2(rc, const_0) {
+    lda %0
+    cmp #0
+    __bpl %a
+} 3
 
 
 #pragma mark - 32 bit
@@ -117,13 +149,25 @@ stmt: NEI4(rc, const_0) {
 stmt: EQU4(rc, const_0) {
     lda %0
     ora %0+2
-    cmp #%1
+    cmp #0
     __beq %a
 } 5
 
 stmt: EQI4(rc, const_0) {
     lda %0
     ora %0+2
-    cmp #%1
+    cmp #0
     __beq %a
 } 5
+
+
+stmt: EQU4(rc, const) {
+    lda %0
+    cmp #%1
+    __bne @no
+    lda %0+2
+    cmp #^%1
+    __beq %a
+@no
+} 6
+
