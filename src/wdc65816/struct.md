@@ -37,7 +37,7 @@ void copy_struct(Node p, Node *kids, short *nts) {
 }
 
 
-void copy_struct_indirect(Node p, Node *kids, short *nts) {
+void copy_struct_indirect_dest(Node p, Node *kids, short *nts) {
 	int size = (p->syms[0]->u.c.v.i + 1) & ~0x01;
 
 	if (size <= 10) {
@@ -76,6 +76,45 @@ void copy_struct_indirect(Node p, Node *kids, short *nts) {
 	);
 }
 
+void copy_struct_indirect_src(Node p, Node *kids, short *nts) {
+	int size = (p->syms[0]->u.c.v.i + 1) & ~0x01;
+
+	if (size <= 10) {
+		int i;
+		int ofs = framesize; // hacky... but easy way to pass a number via %F.
+
+		if (size >= 2) {
+			EMIT(
+				_("lda [%1]")
+				_("sta %0")
+			);
+		}
+		for (i = 2; i < size; i += 2) {
+			framesize = i;
+			EMIT(
+				_("ldy #%F")
+				_("lda [%1],y")
+				_("sta %0+%F")
+			);
+
+		}
+		framesize = ofs;
+		return;
+	}
+
+	EMIT(
+			_("ldx #0")
+	__("@loop")
+			_("txy")
+			_("lda [%1],y")
+			_("sta %0,x")
+			_("inx")
+			_("inx")
+			_("cpx #%a")
+			_("bne @loop")
+	);
+}
+
 
 %}
 
@@ -87,7 +126,7 @@ stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) ^{
 		copy_struct(p, kids, nts);
 		return;
 	}
-	copy_struct_indirect(p, kids, nts);
+	copy_struct_indirect_dest(p, kids, nts);
 }
 
 #struct = struct
@@ -95,6 +134,11 @@ stmt: ASGNB(vregp, INDIRB(address)) ^{
 	copy_struct(p, kids, nts);
 }
 
+
+stmt: ASGNB(vregp, INDIRB(reg)) ^{
+
+	copy_struct_indirect_src(p, kids, nts);
+}
 
 
 # struct = struct (pascal return)
