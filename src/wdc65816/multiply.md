@@ -76,6 +76,28 @@ reg: MULU2(const_10, reg) {
     sta %c
 } 7
 
+#pragma mark - 32-bit
+
+#
+# optimization to avoid the cast.
+#
+reg: MULI4(const_16_bit, CVUI4(INDIRU2(vregp))) {
+    lda #%0
+    ldx %1
+    jsl __mulu2
+    sta %c
+    stx %c+2
+} 20
+
+reg: MULU4(const_16_bit, CVUU4(INDIRU2(vregp))) {
+    lda #%0
+    ldx %1
+    jsl __mulu2
+    sta %c
+    stx %c+2
+} 20
+
+
 #pragma mark - division
 
 reg: DIVU2(rc, rc) {

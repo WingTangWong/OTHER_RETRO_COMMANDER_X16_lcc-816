@@ -178,4 +178,14 @@ reg: RSHI4(reg, const_16) {
     stx %c+2
 } 7
 
-
+reg: LSHI4(CVUI4(INDIRU2(vregp)), const_3) {
+    lda %0
+    stz %c+2
+    asl
+    rol %c+2
+    asl
+    rol %c+2
+    asl
+    rol %c+2
+    sta %c    
+} 9
