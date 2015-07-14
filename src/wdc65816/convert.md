@@ -91,8 +91,8 @@ static void sign_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 		EMIT(
 			_("lda %0")
 			_("ldx #0")
-			_("bit #$8000")
-			_("beq @ok")
+			_("cmp #0")
+			_("bpl @ok")
 
 			_("dex")
 
