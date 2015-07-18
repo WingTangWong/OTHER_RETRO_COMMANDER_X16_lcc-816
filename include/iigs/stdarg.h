@@ -6,7 +6,7 @@ typedef unsigned va_list;
 void __builtin_va_arg(va_list, va_list);
 va_list __builtin_va_start(void *);
 
-#define __va_size(type) ((sizeof(type) + 1) & ~1)
+#define __va_size(type) ((int)(sizeof(type) + 1) & ~1)
 
 // n.b. -- structs?
 #define va_arg(ap, type) \
@@ -17,5 +17,5 @@ va_list __builtin_va_start(void *);
 
 #define va_end(ap) ((void)0)
 #define va_copy(dest, src) (void)(dest = src)
-endif
+#endif
 
