@@ -429,6 +429,7 @@ static void emitclosure(Nonterm nts) {
 		if (p->chain) {
 			Rule r;
 			print("static void %Pclosure_%S(NODEPTR_TYPE a, int c) {\n"
+"%1int ok = 0;\n"
 "%1struct %Pstate *p = STATE_LABEL(a);\n", p);
 			for (r = p->chain; r; r = r->chain)
 				emitrecord("\t", r, "c", r->cost);
@@ -468,7 +469,7 @@ static void emitheader(void) {
 
 	print("/*\ngenerated at %sby %s\n*/\n", ctime(&timer), rcsid);
 	print("static void %Pkids(NODEPTR_TYPE, int, NODEPTR_TYPE[]);\n");
-	print("static void %Plabel(NODEPTR_TYPE);\n");
+	print("static int %Plabel(NODEPTR_TYPE);\n");
 	print("static int %Prule(void*, int);\n\n");
 }
 
@@ -521,18 +522,20 @@ static void emitlabel(Term terms, Nonterm start, int ntnumber) {
 	int i;
 	Term p;
 
-	print("static void %Plabel(NODEPTR_TYPE a) {\n%1int c;\n"
+	print("static int %Plabel(NODEPTR_TYPE a) {\n"
+"%1int c;\n"
+"%1int ok = 0;\n"
 "%1struct %Pstate *p;\n\n"
 "%1if (!a)\n%2fatal(\"%Plabel\", \"Null tree\\n\", 0);\n");
 	print("%1STATE_LABEL(a) = p = allocate(sizeof *p, FUNC);\n"
-"%1p->rule._stmt = 0;\n");
+"%1memset(p, 0, sizeof(*p));\n");
 	for (i = 1; i <= ntnumber; i++)
 		print("%1p->cost[%d] =\n", i);
 	print("%20x7fff;\n%1switch (OP_LABEL(a)) {\n");
 	for (p = terms; p; p = p->link)
 		emitcase(p, ntnumber);
 	print("%1default:\n"
-"%2fatal(\"%Plabel\", \"Bad terminal %%d\\n\", OP_LABEL(a));\n%1}\n}\n\n");
+"%2fatal(\"%Plabel\", \"Bad terminal %%d\\n\", OP_LABEL(a));\n%1return ok;\n}\n}\n\n");
 }
 
 /* computents - fill in bp with _nts vector for tree t */
@@ -585,6 +588,7 @@ static void emitrecalc(char *pre, Term root, Term kid) {
 			print("%s%1if (q->cost[%P%S_NT] == 0) {\n", pre, p);
 			print("%s%2p->cost[%P%S_NT] = 0;\n", pre, p);
 			print("%s%2p->rule.%P%S = q->rule.%P%S;\n", pre, p, p);
+			print("%s%2ok = 1;\n", pre);
 			print("%s%1}\n", pre);
 		}
 		print("%s}\n", pre);
@@ -601,6 +605,8 @@ static void emitrecord(char *pre, Rule r, char *c, int cost) {
 "%s%1p->cost[%P%S_NT] = %s + %d;\n%s%1p->rule.%P%S = %d;\n",
 		c, cost, r->lhs, pre, r->lhs, c, cost, pre, r->lhs,
 		r->packed);
+	print("%s%1ok = 1;\n", pre);
+
 	if (r->lhs->chain)
 		print("%s%1%Pclosure_%S(a, %s + %d);\n", pre, r->lhs, c, cost);
 	print("%s}\n", pre);

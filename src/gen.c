@@ -562,11 +562,16 @@ void rtarget(Node p, int n, Symbol r) {
 	debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
 }
 static void rewrite(Node p) {
+	int ok;
 	assert(p->x.inst == 0);
 	prelabel(p);
 	debug(dumptree(p));
 	debug(fprint(stderr, "\n"));
-	(*IR->x._label)(p);
+	ok = (*IR->x._label)(p);
+	if (dflag && !ok) {
+		fprintf(stderr, "Unable to label node:\n");
+		dumptree(p);
+	}
 	debug(dumpcover(p, 1, 0));
 	reduce(p, 1);
 }

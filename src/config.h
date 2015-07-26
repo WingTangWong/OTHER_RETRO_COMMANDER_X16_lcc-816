@@ -8,7 +8,7 @@ typedef struct {
 	void (*blkloop)(int dreg, int doff,
 	                 int sreg, int soff,
 	                 int size, int tmps[]);
-	void (*_label)(Node);
+	int (*_label)(Node);
 	int (*_rule)(void*, int);
 	short **_nts;
 	void (*_kids)(Node, int, Node*);
