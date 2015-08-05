@@ -75,7 +75,11 @@ static unsigned tool_dispatch(Node p, Type t, FunctionAttr *attr) {
 	if (attr && attr->function_vector) {
 
 		if (attr->registerX) {
-			print("\tldx #$%x\n", attr->registerX);
+			const char *op = "ldx";
+
+			// special case -- gs/os dispatcher pushes x instead of loading it.
+			if (attr->function_vector == 0xE100B0) op = "pea";
+			print("\t%s #$%x\n", op, attr->registerX);
 		}
 
 		print("\tjsl $%x\n", attr->function_vector);
