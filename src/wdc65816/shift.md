@@ -171,7 +171,7 @@ reg: RSHI4(reg, const_16) {
     ldx #0
     lda %0+2
     cmp #0
-    bpl @ok
+    __bpl @ok
     dex
 @ok
     sta %c

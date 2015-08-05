@@ -92,7 +92,7 @@ static void sign_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 			_("lda %0")
 			_("ldx #0")
 			_("cmp #0")
-			_("bpl @ok")
+			_("__bpl @ok")
 
 			_("dex")
 
