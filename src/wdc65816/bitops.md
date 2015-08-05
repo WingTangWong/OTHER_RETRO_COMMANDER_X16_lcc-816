@@ -64,13 +64,13 @@ reg: BXORI2(rc, rc) {
 
 reg: BCOMU2(reg) {
     lda %0
-    eor $#ffff
+    eor #$ffff
     sta %c
 } 3
 
 reg: BCOMI2(reg) {
     lda %0
-    eor $#ffff
+    eor #$ffff
     sta %c
 } 3
 
