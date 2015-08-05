@@ -1,7 +1,7 @@
 #ifndef __stdarg__
 #define __stdarg__
 
-typedef unsigned va_list;
+typedef unsigned short va_list;
 
 void __builtin_va_arg(va_list, va_list);
 va_list __builtin_va_start(void *);
@@ -13,7 +13,8 @@ va_list __builtin_va_start(void *);
 ((type (*)(va_list, va_list))__builtin_va_arg)(ap += __va_size(type), ap)
 
 #define va_start(ap, start) \
-(void)(ap = __builtin_va_start(&start) + __va_size(start))
+(void)(ap = ((unsigned)(unsigned long)&start) + __va_size(start))
+//(void)(ap = __builtin_va_start((unsigned)(unsigned long)&start) + __va_size(start))
 
 #define va_end(ap) ((void)0)
 #define va_copy(dest, src) (void)(dest = src)

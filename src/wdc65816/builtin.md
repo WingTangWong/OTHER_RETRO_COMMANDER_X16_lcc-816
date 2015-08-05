@@ -83,7 +83,7 @@ reg: CALLU4(address) {
 reg: CALLU2(address) {
 	; %0
 	pla ; 
-	ply ; drop
+	;ply ; drop -- no longer needed.
 	sta %c
 } is_builtin(a, iigs_va_start)
 
