@@ -19,6 +19,7 @@ static char *iigs_rol;
 static char *iigs_ror;
 static char *iigs_popcount;
 static char *iigs_tool_error;
+static char *iigs_to_bool;
 
 #define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
 
@@ -41,6 +42,8 @@ static void init_builtins(void) {
 
 	iigs_popcount = STRINGN("__builtin_popcount");
 	iigs_tool_error = STRINGN("__builtin_tool_error");
+
+	iigs_to_bool = STRINGN("__builtin_to_bool");
 
 }
 
@@ -78,6 +81,25 @@ reg: CALLU4(address) {
 	xba
 	sta %c
 } is_builtin(a, iigs_bswap32)
+
+
+reg: CALLU2(address) {
+	; %0
+	pla
+	cmp #0
+	lda #0
+	rol
+	sta %c
+} is_builtin(a, iigs_to_bool)
+
+reg: CALLI2(address) {
+	; %0
+	pla
+	cmp #0
+	lda #0
+	rol
+	sta %c
+} is_builtin(a, iigs_to_bool)
 
 # ap = __builtin_va_start(&fmt) + __va_sizeof(fmt) 
 reg: CALLU2(address) {

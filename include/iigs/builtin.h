@@ -20,6 +20,9 @@ unsigned __builtin_rol(unsigned);
 
 unsigned __builtin_popcount(unsigned);
 
+/* convert to 0/1 */
+unsigned __builtin_to_bool(unsigned);
+
 /* 1 if odd number of bits, 0 if even number of bits */
 #define __builtin_parity(x) (__builtin_popcount(x) & 0x01)
 
