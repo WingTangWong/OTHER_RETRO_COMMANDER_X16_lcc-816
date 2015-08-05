@@ -35,33 +35,7 @@ stmt: ARGI2(const) {
 } 1
 
 
-regA: INDIRI2(address) {
-    lda >%0
-} 1
 
-regA: reg {
-    lda %0
-} 1
-
-#regAX: INDIRI2(address) {
-#    lda >%0
-#    ldx >%0+2
-#} 2
-
-#regAX: reg {
-#    lda %0
-#    ldx %0+2
-#} 2
-
-
-
-stmt: ARGI2(regA) {
-    pha
-} 1
-
-stmt: ARGU2(regA) {
-    pha
-} 1
 
 stmt: ARGU4(const) {
     pea ^%0

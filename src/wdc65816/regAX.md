@@ -25,6 +25,12 @@ regA: LOADU2(const) {
 # address ? need to check short/long m...
 
 
+regAX: vregp {
+    tdc
+    clc
+    adc #%0
+    ldx #0
+}  4
 
 regAX: LOADI4(reg)  {
     lda %0
