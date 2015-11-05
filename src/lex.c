@@ -232,9 +232,19 @@ int gettok(void) {
 				tsym = inttype->u.sym;
 				return INT;
 			}
+			if (rcp[0] == 'n'
+			&&  rcp[1] == 'l'
+			&&  rcp[2] == 'i'
+			&&  rcp[3] == 'n'
+			&&  rcp[4] == 'e'
+			&& !(map[rcp[5]]&(DIGIT|LETTER))) {
+				cp = rcp + 5;
+				return INLINE;
+			}
 			goto id;
+
 		case 'h': case 'j': case 'k': case 'm': case 'n': case 'o':
-		case 'p': case 'q': case 'x': case 'y': case 'z':
+		case 'q': case 'x': case 'y': case 'z':
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
 		case 'G': case 'H': case 'I': case 'J': case 'K':
 		case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
@@ -526,6 +536,20 @@ int gettok(void) {
 				return LONG;
 			}
 			goto id;
+
+		/* orca/c -- pascal */
+		case 'p':
+			if (rcp[0] == 'a'
+			&&  rcp[1] == 's'
+			&&  rcp[2] == 'c'
+			&&  rcp[3] == 'a'
+			&&  rcp[4] == 'l'
+			&& !(map[rcp[5]]&(DIGIT|LETTER))) {
+				cp = rcp + 5;
+				return PASCAL;
+			}
+			goto id;
+
 		case 'r':
 			if (rcp[0] == 'e'
 			&&  rcp[1] == 'g'
@@ -546,6 +570,18 @@ int gettok(void) {
 			&& !(map[rcp[5]]&(DIGIT|LETTER))) {
 				cp = rcp + 5;
 				return RETURN;
+			}
+			// c99 restrict
+			if (rcp[0] == 'e'
+			&&  rcp[1] == 's'
+			&&  rcp[2] == 't'
+			&&  rcp[3] == 'r'
+			&&  rcp[4] == 'i'
+			&&  rcp[5] == 'c'
+			&&  rcp[6] == 't'
+			&& !(map[rcp[7]]&(DIGIT|LETTER))) {
+				cp = rcp + 7;
+				return RESTRICT;
 			}
 			goto id;
 		case 's':
@@ -668,6 +704,37 @@ int gettok(void) {
 			}
 			goto id;
 		case '_':
+			/* _Noreturn */
+			if (rcp[0] == 'N'
+			&&  rcp[1] == 'o'
+			&&  rcp[2] == 'r'
+			&&  rcp[3] == 'e'
+			&&  rcp[4] == 't'
+			&&  rcp[5] == 'u'
+			&&  rcp[6] == 'r'
+			&&  rcp[7] == 'n'
+			&& !(map[rcp[8]]&(DIGIT|LETTER))) {
+				cp = rcp + 8;
+				return NORETURN;
+			}
+			/* __attribute__ */
+			if (rcp[0] == '_'
+			&&  rcp[1] == 'a'
+			&&  rcp[2] == 't'
+			&&  rcp[3] == 't'
+			&&  rcp[4] == 'r'
+			&&  rcp[5] == 'i'
+			&&  rcp[6] == 'b'
+			&&  rcp[7] == 'u'
+			&&  rcp[8] == 't'
+			&&  rcp[9] == 'e'
+			&&  rcp[10] == '_'
+			&&  rcp[11] == '_'
+			&& !(map[rcp[12]]&(DIGIT|LETTER))) {
+				cp = rcp + 12;
+				return ATTRIBUTE;
+			}
+			/* __typecode */
 			if (rcp[0] == '_'
 			&&  rcp[1] == 't'
 			&&  rcp[2] == 'y'
@@ -681,6 +748,8 @@ int gettok(void) {
 				cp = rcp + 9;
 				return TYPECODE;
 			}
+
+			/* __firstarg */
 			if (rcp[0] == '_'
 			&&  rcp[1] == 'f'
 			&&  rcp[2] == 'i'

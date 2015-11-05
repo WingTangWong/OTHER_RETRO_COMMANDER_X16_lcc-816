@@ -334,6 +334,7 @@ struct functionattr {
 	unsigned near:1;
 	unsigned databank:1;
 	unsigned debug:1;
+	unsigned function_inline:1;
 
 	unsigned function_vector;
 	unsigned registerX;
@@ -603,12 +604,13 @@ extern Type array(Type, int, int);
 extern Type atop(Type);
 extern Type btot(int, int);
 extern Type compose(Type, Type);
+extern FunctionAttr *compose_attr(FunctionAttr *, FunctionAttr *);
 extern Type deref(Type);
 extern int eqtype(Type, Type, int);
 extern Field fieldlist(Type);
 extern Type freturn(Type);
 extern Type ftype(Type, ...);
-extern Type func(Type, Type *, int);
+extern Type func(Type, Type *, int, FunctionAttr *attr);
 extern Field newfield(char *, Type, Type);
 extern Type newstruct(int, char *);
 extern void printtype(Type, int);
