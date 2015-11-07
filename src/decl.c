@@ -1098,7 +1098,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 			for (i = 0; i < n; i++)
 				proto[i] = caller[i]->type;
 			proto[i] = NULL;
-			ty = func(rty, proto, 1, NULL);
+			ty = func(rty, proto, 1, ty->u.f.attr); 
 		}
 	} else {
 		callee = params;
