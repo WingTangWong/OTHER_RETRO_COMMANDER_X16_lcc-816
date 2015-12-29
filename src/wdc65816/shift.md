@@ -189,3 +189,51 @@ reg: LSHI4(CVUI4(INDIRU2(vregp)), const_3) {
     rol %c+2
     sta %c    
 } 9
+
+
+
+reg: LSHI4(reg, const_1) {
+    asl %c
+    rol %c+2
+} rmw(a,2)
+
+reg: LSHI4(reg, const_2) {
+    asl %c
+    rol %c+2
+    asl %c
+    rol %c+2
+} rmw(a,4)
+
+reg: LSHI4(reg, const_3) {
+    asl %c
+    rol %c+2
+    asl %c
+    rol %c+2
+    asl %c
+    rol %c+2
+} rmw(a,6)
+
+reg: LSHI4(reg, const_1) {
+    lda %0
+    asl
+    sta %c+0
+    lda %0+2
+    rol
+    sta %c+2
+} 6
+
+
+reg: LSHI4(reg, const_2) {
+    lda %0
+    asl
+    sta %c+0
+    lda %0+2
+    rol
+    sta %c+2
+    lda %0
+    asl
+    sta %c+0
+    lda %0+2
+    rol
+    sta %c+2
+} 12
