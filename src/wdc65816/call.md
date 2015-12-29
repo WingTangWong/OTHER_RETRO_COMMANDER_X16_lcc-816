@@ -188,10 +188,10 @@ static void call_indirect(Node p, Node *kids, short *nts) {
 	}
 
 	// if not CALLV, handle the return address
-	return_value(p, t, NULL);
+	return_value(p, t, attr);
 
 	// clean up the stack.
-	repair_stack(p, t, NULL);
+	repair_stack(p, t, attr);
 }
 
 /* CALLx(address) or CALLx(const) */
