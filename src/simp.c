@@ -217,10 +217,11 @@ long longexpr(int tok, long n) {
 	return n;
 }
 
-
-Tree simplify(int op, Type ty, Tree l, Tree r) {
+Tree simplify2(int op, Type ty, Tree l, Tree r, int addp) {
 	int n;
 	Tree p;
+	
+#define simplify(a,b,c,d) simplify2(a,b,c,d,addp)
 
 	if (optype(op) == 0)
 		op = mkop(op, ty);
@@ -333,14 +334,19 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			||  r->op == CNST+U && r->u.v.u > 65536))
 				break;
 
-			if (IR->address
+			// kws -- don't simplify address + const.  screws up later optimizations.
+
+			// __ctype[x+1] -> __ctype+1,x.  this is wrong on the 816.
+			// however, it's needed for static initialization.
+
+			if (addp && IR->address
 			&&  isaddrop(l->op)
 			&& (r->op == CNST+I && r->u.v.i <= longtype->u.sym->u.limits.max.i
 			    && r->u.v.i >= longtype->u.sym->u.limits.min.i
 			||  r->op == CNST+U && r->u.v.u <= longtype->u.sym->u.limits.max.i))
 				return addrtree(l, cast(r, longtype)->u.v.i, ty);
 
-			if (IR->address
+			if (addp && IR->address
 			&&  l->op == ADD+P && isaddrop(l->kids[1]->op)
 			&& (r->op == CNST+I && r->u.v.i <= longtype->u.sym->u.limits.max.i
 			    && r->u.v.i >= longtype->u.sym->u.limits.min.i
@@ -378,7 +384,7 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			 * to 32-bit pointer
 			 */
 			// unsigned.
-			if (isaddrop(r->op) && generic(l->op) == CVU) {
+			if (addp && isaddrop(r->op) && generic(l->op) == CVU) {
 				Tree ll = l->kids[0];
 				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
 
@@ -389,7 +395,7 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 				}
 			}
 			// signed.
-			if (isaddrop(r->op) && generic(l->op) == CVI) {
+			if (addp && isaddrop(r->op) && generic(l->op) == CVI) {
 				Tree ll = l->kids[0];
 				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
 
@@ -639,6 +645,11 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 	}
 	return tree(op, ty, l, r);
 }
+#undef simplify
+Tree simplify(int op, Type ty, Tree l, Tree r) {
+	return simplify2(op, ty, l, r, 0);
+}
+
 /* ispow2 - if u > 1 && u == 2^n, return n, otherwise return 0 */
 int ispow2(unsigned long u) {
 	int n;
