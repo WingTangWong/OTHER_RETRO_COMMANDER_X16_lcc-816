@@ -130,38 +130,94 @@ stmt: GEI2(rc, const_0) {
 
 
 #pragma mark - 32 bit
+
+
+stmt: NEU4(reg, reg) {
+    lda %0
+    cmp %1
+    __bne %a
+    lda %0+2
+    cmp %1+2
+    __bne %a
+} 6
+
+stmt: NEI4(reg, reg) {
+    lda %0
+    cmp %1
+    __bne %a
+    lda %0+2
+    cmp %1+2
+    __bne %a
+} 6
+
+stmt: NEU4(reg, const) {
+    lda %0
+    cmp #%1
+    __bne %a
+    lda %0+2
+    cmp #^%1
+    __bne %a
+} 6
+
+stmt: NEI4(reg, const) {
+    lda %0
+    cmp #%1
+    __bne %a
+    lda %0+2
+    cmp #^%1
+    __bne %a
+} 6
+
+
+stmt: NEU4(LOADU4(INDIRP4(reg)),const_0) {
+    ldy #2
+    lda [%0]
+    ora [%0],y
+    cmp #0
+    __bne %a
+} 5
+
+stmt: EQU4(LOADU4(INDIRP4(reg)),const_0) {
+    ldy #2
+    lda [%0]
+    ora [%0],y
+    cmp #0
+    __beq %a
+} 5
+
+
 # let the optimizer remove cmp #0?
-stmt: NEU4(rc, const_0) {
+stmt: NEU4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #%1
     __bne %a
-} 5
+} 4
 
-stmt: NEI4(rc, const_0) {
+stmt: NEI4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #%1
     __bne %a
-} 5
+} 4
 
 
-stmt: EQU4(rc, const_0) {
+stmt: EQU4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #0
     __beq %a
-} 5
+} 4
 
-stmt: EQI4(rc, const_0) {
+stmt: EQI4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #0
     __beq %a
-} 5
+} 4
 
 
-stmt: EQU4(rc, const) {
+stmt: EQU4(reg, const) {
     lda %0
     cmp #%1
     __bne @no
@@ -170,4 +226,7 @@ stmt: EQU4(rc, const) {
     __beq %a
 @no
 } 6
+
+
+
 
