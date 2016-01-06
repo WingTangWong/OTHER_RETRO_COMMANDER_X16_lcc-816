@@ -261,8 +261,25 @@ reg: CALLU2(address) {
 	eor %c
 	sta %c
 	bne @loop
-	stx %c
 @fini
+	stx %c  ; stx here is easier to optimize
+} is_builtin(a, iigs_popcount)
+
+reg: CALLI2(address) {
+	; %0
+	pla
+	ldx #0
+	sta %c ; scratch
+	cmp #0
+	beq @fini
+@loop
+	inx
+	dec
+	eor %c
+	sta %c
+	bne @loop
+@fini
+	stx %c
 } is_builtin(a, iigs_popcount)
 
 
