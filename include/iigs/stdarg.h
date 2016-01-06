@@ -1,5 +1,5 @@
-#ifndef __stdarg__
-#define __stdarg__
+#ifndef __stdarg_h__
+#define __stdarg_h__
 
 typedef unsigned short va_list;
 
@@ -19,4 +19,3 @@ va_list __builtin_va_start(void *);
 #define va_end(ap) ((void)0)
 #define va_copy(dest, src) (void)(dest = src)
 #endif
-
