@@ -26,6 +26,12 @@ reg: INDIRI4(address_with_modifier) {
     stx %c+2
 } 4
 
+reg: INDIRP4(address_with_modifier) {
+    lda %0
+    ldx %0+2
+    sta %c
+    stx %c+2
+} 4
 
 
 #reg: INDIRU2(address) {
