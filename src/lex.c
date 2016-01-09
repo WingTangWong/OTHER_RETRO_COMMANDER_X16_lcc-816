@@ -169,7 +169,8 @@ int gettok(void) {
 		src.y = lineno;
 		cp = rcp + 1;
 		switch (*rcp++) {
-		case '/': if (*rcp == '*') {
+		case '/': 
+			if (*rcp == '*') {
 			  	int c = 0;
 			  	for (rcp++; *rcp != '/' || c != '*'; )
 			  		if (map[*rcp]&NEWLINE) {
@@ -186,6 +187,26 @@ int gettok(void) {
 			  		rcp++;
 			  	else
 			  		error("unclosed comment\n");
+			  	cp = rcp;
+			  	continue;
+			  }
+			  if (*rcp == '/') {
+			  	/* c++ style comments */
+			  	rcp++;
+			  	for(;;) {
+			  		if (map[*rcp] & NEWLINE) {
+			  			/* new line -or- end of buffer. */
+			  			if (rcp < limit) break;
+			  			cp = rcp + 1;
+			  			nextline();
+			  			rcp = cp;
+			  			if (rcp == limit) break;
+			  		}
+			  		else {
+			  			rcp++;
+			  		}
+			  	}
+			  	if (rcp < limit) rcp++;
 			  	cp = rcp;
 			  	continue;
 			  }
