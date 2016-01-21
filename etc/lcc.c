@@ -71,7 +71,7 @@ char *tempdir = TEMPDIR;	/* directory for temporary files */
 static char *progname;
 static List lccinputs;		/* list of input directories */
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	int i, j, nf;
 	
 	progname = argv[0];
@@ -405,7 +405,7 @@ static int filename(char *name, char *base) {
 		else if (itemp == NULL)
 			itemp = ofile = tempname(first(suffixes[1]));
 
-		compose(cpp, plist, append(name, 0), append(ofile, 0));
+		compose(cpp, plist, append(name, 0), ofile ? append(ofile, 0) : NULL);
 		status = callsys(av);
 		if (Eflag) break;
 
