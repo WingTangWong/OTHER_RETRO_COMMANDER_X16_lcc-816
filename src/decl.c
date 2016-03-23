@@ -1052,6 +1052,10 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	int i, n;
 	Symbol *callee, *caller, p;
 	Type rty = freturn(ty);
+	int wants_callb = IR->wants_callb;
+
+	if (IR->x.wants_callb)
+		wants_callb = IR->x.wants_callb(ty);
 
 	if (isstruct(rty) && rty->size == 0)
 		error("illegal use of incomplete type `%t'\n", rty);
@@ -1158,7 +1162,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	regcount = 0;
 	codelist = &codehead;
 	codelist->next = NULL;
-	if (!IR->wants_callb && isstruct(rty))
+	if (!wants_callb && isstruct(rty))
 		retv = genident(AUTO, ptr(unqual(rty)), PARAM);
 	compound(0, NULL, 0);
 
@@ -1169,7 +1173,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	exitscope();
 	assert(level == PARAM);
 	foreach(identifiers, level, checkref, NULL);
-	if (!IR->wants_callb && isstruct(rty)) {
+	if (!wants_callb && isstruct(rty)) {
 		Symbol *a;
 		a = newarray(n + 2, sizeof *a, FUNC);
 		a[0] = retv;
@@ -1218,6 +1222,7 @@ static void oldparam(Symbol p, void *cl) {
 void compound(int loop, struct swtch *swp, int lev) {
 	Code cp;
 	int nregs;
+	int wants_callb = IR->wants_callb;
 
 	walk(NULL, 0, 0);
 	cp = code(Blockbeg);
@@ -1228,7 +1233,12 @@ void compound(int loop, struct swtch *swp, int lev) {
 	definept(NULL);
 	expect('{');
 	autos = registers = NULL;
-	if (level == LOCAL && IR->wants_callb
+
+	// fix wants_callb.
+	if (level == LOCAL && IR->x.wants_callb)
+		wants_callb = IR->x.wants_callb(cfunc->type);
+
+	if (level == LOCAL && wants_callb
 	&& isstruct(freturn(cfunc->type))) {
 		retv = genident(AUTO, ptr(unqual(freturn(cfunc->type))), level);
 		retv->defined = 1;

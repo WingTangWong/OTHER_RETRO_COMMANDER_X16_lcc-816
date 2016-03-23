@@ -214,8 +214,13 @@ Node listnodes(Tree tp, int tlab, int flab) {
 				//printtree(tp, 1);
 
 				left_to_right = IR->left_to_right;
+				int wants_callb = IR->wants_callb;
+
 				if (IR->x.left_to_right)
 					left_to_right = IR->x.left_to_right(tp->kids[0]->type->type);
+
+				if (IR->x.wants_callb)
+					wants_callb = IR->x.wants_callb(tp->kids[0]->type->type);
 
 				// create entry before the call.
 				if (IR->wants_xcall) {
@@ -223,7 +228,7 @@ Node listnodes(Tree tp, int tlab, int flab) {
 					list(xcall);
 				}
 
-				if (tp->op == CALL+B && !IR->wants_callb) {
+				if (tp->op == CALL+B && !wants_callb) {
 					Tree arg0 = tree(ARG+P, tp->kids[1]->type,
 						tp->kids[1], NULL);
 					if (left_to_right)

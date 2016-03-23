@@ -23,6 +23,7 @@ typedef struct {
 	void (*clobber)(Node);
 	int (*preventCSE)(Node);
 	int (*left_to_right)(Type);
+	int (*wants_callb)(Type);
 } Xinterface;
 extern int     askregvar(Symbol, Symbol);
 extern void    blkcopy(int, int, int, int, int, int[]);
