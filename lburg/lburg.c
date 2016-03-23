@@ -535,7 +535,7 @@ static void emitlabel(Term terms, Nonterm start, int ntnumber) {
 	for (p = terms; p; p = p->link)
 		emitcase(p, ntnumber);
 	print("%1default:\n"
-"%2fatal(\"%Plabel\", \"Bad terminal %%d\\n\", OP_LABEL(a));\n%1return ok;\n}\n}\n\n");
+"%2fatal(\"%Plabel\", \"Bad terminal %%d\\n\", OP_LABEL(a));\n%1}\n%1return ok;\n}\n\n");
 }
 
 /* computents - fill in bp with _nts vector for tree t */
