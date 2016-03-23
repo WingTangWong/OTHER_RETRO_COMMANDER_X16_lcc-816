@@ -112,6 +112,8 @@ struct ToolSpec {
    };
 typedef struct ToolSpec ToolSpec;
 
+#define MakeToolTable(size) struct { Word toolCount; ToolSpec theTools[size]; }
+
 struct ToolTable {
    Word toolCount;
    ToolSpec theTools[theToolsLength];
