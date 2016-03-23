@@ -657,6 +657,12 @@ static void funcattr(FunctionAttr *fa, int sentinel) {
 
 	}
 
+	if (t == PASCAL) {
+		fa->pascal = 1;
+		t = gettok();
+		return;
+	}
+
 	/* unknown .. pull tokens until we get sentinel or ,
 	 * `,'  (and only `,') has a kind of `,', so we
 	 * can use skipto.
