@@ -141,6 +141,8 @@ static void repair_stack(Node p, Type t, FunctionAttr *attr) {
 
 	if (attr) {
 		if (attr->pascal) return;
+		if (attr->noreturn) return; // noreturn? return!
+
 		if (attr->stdcall) return; // unless variadic...
 		//stdcall  - caller cleans up, unless variadic.
 	}
@@ -231,8 +233,6 @@ stmt: XCALLV ^{
 	unsigned cdecl = 1;
 	unsigned xcall = 0;
 
-
-
 	// scan forward to find the call.
 	//p = p->x.next; // skip current node since it's an xcall.
 	while(p) {
@@ -294,6 +294,8 @@ stmt: XCALLV ^{
 			return_size -= 2;
 		}
 	}
+
+	if (attr && attr->noreturn) return;
 
 	if (cdecl && arg_size > STACK_REPAIR_PLY_LIMIT && arg_size < STACK_REPAIR_ADC_MIN) {
 		print("\t; save stack\n" "\ttsx\n" "\tphx\n");
