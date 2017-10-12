@@ -15,8 +15,8 @@ static void checkref(Symbol, void *);
 static Symbol dclglobal(int, char *, Type, Coordinate *);
 static Symbol dcllocal(int, char *, Type, Coordinate *);
 static Symbol dclparam(int, char *, Type, Coordinate *);
-static Type dclr(Type, char **, Symbol **, int);
-static Type dclr1(char **, Symbol **, int);
+static Type dclr(Type, char **, Symbol **, int, FunctionAttr **);
+static Type dclr1(char **, Symbol **, int, FunctionAttr **);
 static void decl(Symbol (*)(int, char *, Type, Coordinate *));
 extern void doconst(Symbol, void *);
 static void doglobal(Symbol, void *);
@@ -26,8 +26,8 @@ static void fields(Type);
 static void funcdefn(int, char *, Type, Symbol [], Coordinate);
 static void initglobal(Symbol, int);
 static void oldparam(Symbol, void *);
-static Symbol *parameters(Type);
-static Type specifier(int *);
+static Symbol *parameters(Type, FunctionAttr **attr);
+static Type specifier(int *, FunctionAttr **);
 static Type structdcl(int);
 static Type tnode(int, Type);
 void program(void) {
@@ -51,16 +51,111 @@ void program(void) {
 	if (n == 0)
 		warning("empty input file\n");
 }
-static Type specifier(int *sclass) {
+
+static void checkfuncattr(FunctionAttr *fa);
+
+/*
+ * C11:
+ *
+ * 6.7
+ *
+ * declaration-specifiers:
+ *   storage-class-specifier declaration-specifiers* 
+ *   type-specifier declaration-specifiers* 
+ *   type-qualifier declaration-specifiers* 
+ *   function-specifier declaration-specifiers* 
+ *   alignment-specifier declaration-specifiers*
+ *
+ * 6.7.1 Storage-class specifiers
+ * storage-class-specifier:
+ *   typedef
+ *   extern
+ *   static
+ *   auto
+ *   register
+ *   _Thread_local [c11]
+ *
+ * 6.7.2 Type specifiers Syntax
+ * type-specifier:
+ *   void
+ *   char
+ *   short
+ *   int
+ *   long
+ *   float
+ *   double
+ *   signed
+ *   unsigned
+ *   _Bool  [c99]
+ *   _Complex [c99]
+ *   _Imaginary [c99]
+ *   atomic-type-specifier
+ *   struct-or-union-specifier
+ *   enum-specifier
+ *   typedef-name
+ *
+ * 6.7.3 Type qualifiers
+ * type-qualifier: 
+ *   const
+ *   volatile
+ *   restrict [c99]
+ *   _Atomic [c11]
+ *
+ * 6.7.4 Function specifiers
+ * function-specifier: 
+ *   inline [c99]
+ *   _Noreturn [c11]
+ *   pascal [iigs]
+ *
+ * 6.7.5 Alignment specifier
+ * alignment-specifier:
+ *   _Alignas ( type-name ) [c11]
+ *   _Alignas ( constant-expression ) [c11]
+ *
+ *
+ *
+ */
+
+static Type specifier(int *sclass, FunctionAttr **attr) {
 	int cls, cons, sign, size, type, vol;
+	int tmp;
 	Type ty = NULL;
+	FunctionAttr *fa = attr ? *attr : NULL;
 
 	cls = vol = cons = sign = size = type = 0;
+	tmp = 0;
 	if (sclass == NULL)
 		cls = AUTO;
 	for (;;) {
 		int *p, tt = t;
 		switch (t) {
+
+		case NORETURN:
+			if (!fa) NEW0(fa, 0);
+			fa->noreturn = 1;
+			p = &tmp; tmp = 0; t = gettok(); break;
+		case PASCAL:
+			if (!fa) NEW0(fa, 0);
+			fa->pascal = 1;
+			p = &tmp; tmp = 0; t = gettok(); break;
+		case INLINE:
+			if (!fa) NEW0(fa, 0);
+			fa->function_inline = 1;
+			p = &tmp; tmp = 0; t = gettok(); break;
+
+		case RESTRICT:
+			/* c99 -- ignore for now */
+			p = &tmp; tmp = 0; t = gettok(); break;
+
+
+			/* [[ ... ]] or __attribute__ (( ... )) */
+			/* these skip to the next token. */
+		case '[':
+		case ATTRIBUTE:
+			if (!fa) NEW0(fa, 0);
+			checkfuncattr(fa);
+			p = &tmp; tmp = 0; /* t = gettok(); */ break;
+
 		case AUTO:
 		case REGISTER: if (level <= GLOBAL && cls == 0)
 		               	error("invalid use of `%k'\n", t);
@@ -139,14 +234,18 @@ static Type specifier(int *sclass) {
 		ty = qual(CONST, ty);
 	if (vol  == VOLATILE)
 		ty = qual(VOLATILE, ty);
+
+	//ty->u.f.attr = fa;
+	if (attr) *attr = fa;
 	return ty;
 }
 static void decl(Symbol (*dcl)(int, char *, Type, Coordinate *)) {
 	int sclass;
 	Type ty, ty1;
+	FunctionAttr *attr = NULL;
 	static char stop[] = { CHAR, STATIC, ID, 0 };
 
-	ty = specifier(&sclass);
+	ty = specifier(&sclass, &attr);
 	if (t == ID || t == '*' || t == '(' || t == '[') {
 		char *id;
 		Coordinate pos;
@@ -154,7 +253,7 @@ static void decl(Symbol (*dcl)(int, char *, Type, Coordinate *)) {
 		pos = src;
 		if (level == GLOBAL) {
 			Symbol *params = NULL;
-			ty1 = dclr(ty, &id, &params, 0);
+			ty1 = dclr(ty, &id, &params, 0, &attr);
 			if (params && id && isfunc(ty1)
 			    && (t == '{' || istypename(t, tsym)
 			    || (kind[t] == STATIC && t != TYPEDEF))) {
@@ -169,7 +268,7 @@ static void decl(Symbol (*dcl)(int, char *, Type, Coordinate *)) {
 			} else if (params)
 				exitparams(params);
 		} else
-			ty1 = dclr(ty, &id, NULL, 0);
+			ty1 = dclr(ty, &id, NULL, 0, &attr);
 		for (;;) {
 			if (Aflag >= 1 && !hasproto(ty1))
 				warning("missing prototype\n");
@@ -193,7 +292,7 @@ static void decl(Symbol (*dcl)(int, char *, Type, Coordinate *)) {
 			t = gettok();
 			id = NULL;
 			pos = src;
-			ty1 = dclr(ty, &id, NULL, 0);
+			ty1 = dclr(ty, &id, NULL, 0, &attr); // &attr?
 		}
 	} else if (ty == NULL
 	|| !(isenum(ty) ||
@@ -291,8 +390,8 @@ void defglobal(Symbol p, int seg) {
 	p->defined = 1;
 }
 
-static Type dclr(Type basety, char **id, Symbol **params, int abstract) {
-	Type ty = dclr1(id, params, abstract);
+static Type dclr(Type basety, char **id, Symbol **params, int abstract, FunctionAttr **attr) {
+	Type ty = dclr1(id, params, abstract, attr);
 
 	for ( ; ty; ty = ty->type)
 		switch (ty->op) {
@@ -301,8 +400,9 @@ static Type dclr(Type basety, char **id, Symbol **params, int abstract) {
 			break;
 		case FUNCTION:
 			basety = func(basety, ty->u.f.proto,
-				ty->u.f.oldstyle);
+				ty->u.f.oldstyle, attr ? *attr : NULL);
 			break;
+
 		case ARRAY:
 			basety = array(basety, ty->size, 0);
 			break;
@@ -323,36 +423,54 @@ static Type tnode(int op, Type type) {
 	ty->type = type;
 	return ty;
 }
-static Type dclr1(char **id, Symbol **params, int abstract) {
+static Type dclr1(char **id, Symbol **params, int abstract, FunctionAttr **attr) {
 	Type ty = NULL;
 
 	switch (t) {
-	case ID:                if (id)
+	case ID:
+				if (id)
 					*id = token;
 				else
 					error("extraneous identifier `%s'\n", token);
 				t = gettok(); break;
-	case '*': t = gettok(); if (t == CONST || t == VOLATILE) {
+	case '*':
+				t = gettok(); 
+				// c99 modifications to allow but ignore restrict.
+				while (t == RESTRICT) t = gettok();
+
+				if (t == CONST || t == VOLATILE) {
 					Type ty1;
 					ty1 = ty = tnode(t, NULL);
-					while ((t = gettok()) == CONST || t == VOLATILE)
-						ty1 = tnode(t, ty1);
-					ty->type = dclr1(id, params, abstract);
+
+					for(;;) {
+						t = gettok();
+						if (t == RESTRICT) continue;
+
+						if (t == CONST || t == VOLATILE) {
+							ty1 = tnode(t, ty1);
+							continue;
+						}
+						break;
+					}
+
+					ty->type = dclr1(id, params, abstract, attr);
 					ty = ty1;
 				} else
-					ty = dclr1(id, params, abstract);
+					ty = dclr1(id, params, abstract, attr);
 				ty = tnode(POINTER, ty); break;
-	case '(': t = gettok(); if (abstract
+	case '(':
+				t = gettok(); 
+				if (abstract
 				&& (t == REGISTER || istypename(t, tsym) || t == ')')) {
 					Symbol *args;
 					ty = tnode(FUNCTION, ty);
 					enterscope();
 					if (level > PARAM)
 						enterscope();
-					args = parameters(ty);
+					args = parameters(ty, attr); // pass attr?
 					exitparams(args);
 				} else {
-					ty = dclr1(id, params, abstract);
+					ty = dclr1(id, params, abstract, attr);
 					expect(')');
 					if (abstract && ty == NULL
 					&& (id == NULL || *id == NULL))
@@ -368,12 +486,12 @@ static Type dclr1(char **id, Symbol **params, int abstract) {
 					  enterscope();
 					  if (level > PARAM)
 					  	enterscope();
-					  args = parameters(ty);
+					  args = parameters(ty, attr);
 					  if (params && *params == NULL)
 					  	*params = args;
 					  else
 					  	exitparams(args);
- }
+					}
 		          break;
 		case '[': t = gettok(); { int n = 0;
 					  if (kind[t] == ID) {
@@ -390,7 +508,267 @@ static Type dclr1(char **id, Symbol **params, int abstract) {
 		}
 	return ty;
 }
-static Symbol *parameters(Type fty) {
+
+#define STRINGN(string) stringn("" string "" , sizeof(string) - 1)
+
+static unsigned expecting(int tok) {
+	if (t == tok) {
+		t = gettok();
+		return 1;
+	}
+	expect(tok);
+	return 0;
+}
+
+static unsigned funcattr_string(char **dest) {
+
+	// eg, segment("segname")
+	char *cp;
+
+	if (!expecting('(')) return 0;
+
+	if (t != SCON) {
+		expect(SCON);
+		return 0;
+	}
+
+	cp = tsym->u.c.v.p;
+	*dest =  stringn(cp, strlen(cp));
+
+	t = gettok();
+	return expecting(')');
+}
+
+
+static unsigned funcattr_inline(FunctionAttr *fa) {
+	unsigned long a, b;
+
+	// inline(x, address) -or- inline(address)
+	if (!expecting('(')) return 0;
+
+	// todo -- need unsigned support so inline(...,$8000) doesn't warn.
+
+	a = longexpr(0, 0);
+
+
+
+	if (t == ',') {
+		t = gettok();
+
+		b = longexpr(0, 0);
+		fa->registerX = a;
+		fa->function_vector = b;
+	} else {
+		fa->function_vector = a;
+	}
+
+	return expecting(')');
+}
+static void funcattr(FunctionAttr *fa, int sentinel) {
+
+	static char stop[] = { ',', 0 };
+
+	static int init = 0;
+	static char *id_noreturn = NULL;
+	static char *id_pascal = NULL;
+	static char *id_cdecl = NULL;
+	static char *id_stdcall = NULL;
+	static char *id_near = NULL;
+	static char *id_databank = NULL;
+	static char *id_inline = NULL;
+	static char *id_debug = NULL;
+
+	//static char *id_function_vector = NULL;
+	static char *id_segment = NULL;
+
+	if (!init) {
+		id_pascal = STRINGN("pascal");
+		id_noreturn = STRINGN("noreturn");
+		id_cdecl = STRINGN("cdecl");
+		id_stdcall = STRINGN("stdcall");
+		id_near = STRINGN("near");
+		id_databank = STRINGN("databank");
+
+		id_inline = STRINGN("inline");
+		id_segment = STRINGN("segment");
+		id_debug = STRINGN("debug");
+
+		init = 1;
+	}
+
+	if (t == ID) {
+
+		if (token == id_noreturn) {
+			fa->noreturn = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_pascal) {
+			fa->pascal = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_cdecl) {
+			fa->cdecl = 1;
+			t = gettok();
+			return;
+		}
+		if (token == id_stdcall) {
+			fa->stdcall = 1;
+			t = gettok();
+			return;
+		}
+
+		if (token == id_databank) {
+			fa->databank = 1;
+			t = gettok();
+			return;
+		}
+
+		if (token == id_debug) {
+			fa->debug = 1;
+			t = gettok();
+			return;
+		}
+
+
+		// rts/rtl/rti?
+		if (token == id_near) {
+			fa->near = 1;
+			t = gettok();
+			return;
+		}
+
+		if (token == id_inline) {
+			t = gettok();
+			if (!funcattr_inline(fa))
+				skipto(sentinel, stop);
+
+			return;
+		}
+
+		if (token == id_segment) {
+			t = gettok();
+			if (!funcattr_string(&fa->segment))
+				skipto(sentinel, stop);
+
+			return;
+		}
+
+	}
+
+	if (t == PASCAL) {
+		fa->pascal = 1;
+		t = gettok();
+		return;
+	}
+
+	/* unknown .. pull tokens until we get sentinel or ,
+	 * `,'  (and only `,') has a kind of `,', so we
+	 * can use skipto.
+	 */
+
+	warning("Unrecognized function attribute\n");
+	skipto(sentinel, stop);
+}
+
+static FunctionAttr *funcattrlist(FunctionAttr *fa, int sentinel) {
+
+	for(;;) {
+		if (t == sentinel) break;
+
+		funcattr(fa, sentinel);
+
+		if (t != ',') break;
+		t = gettok();
+	}
+
+	// checkfuncattr will verify the sentinel character.
+
+	return fa;
+}
+
+static void checkfuncattr(FunctionAttr *fa) {
+	/* parse function attributes
+	 * __attribute__ (( ... )) [gnu/ibm style]
+	 * -- or -- 
+	 * [[...]] [c++11 style]
+	 */ 
+
+	// merge multiple attributes, eg, __attribute__((noreturn)) __attribute__((pascal)) legal.
+
+	static char *attr = NULL;
+	static char stop[] = { CHAR, STATIC, IF, ')', 0 };
+
+
+
+#ifdef ATTRIBUTE
+	if (t == ATTRIBUTE) {
+#else
+	if (!attr) attr = STRINGN("__attribute__");
+	if (t == ID && token == attr) {
+#endif
+		t = gettok();
+		if (t != '(') {
+			expect('(');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != '(') {
+			expect('(');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+		funcattrlist(fa, ')');
+
+		if (t != ')') {
+			expect(')');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != ')') {
+			expect(')');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+	} else if (t == '[') {
+
+		t = gettok();
+		if (t != '[') {
+			expect('[');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+
+		funcattrlist(fa, ']');
+
+		if (t != ']') {
+			expect(']');
+			skipto('{', stop);
+			return;
+		}
+
+		t = gettok();
+		if (t != ']') {
+			expect(']');
+			skipto('{', stop);
+			return;
+		}
+		t = gettok();
+	}
+}
+
+
+static Symbol *parameters(Type fty, FunctionAttr **attr) {
 	List list = NULL;
 	Symbol *params;
 
@@ -416,7 +794,11 @@ static Symbol *parameters(Type fty) {
 			if (!istypename(t, tsym) && t != REGISTER)
 				error("missing parameter type\n");
 			n++;
-			ty = dclr(specifier(&sclass), &id, NULL, 1);
+			// also need a new FunctionAttr here? 
+			// void foo(void _Noreturn (*fx)(void));  <-- error, per clang
+			// void foo(void __attribute__((noreturn)) (*fx)(void));  <-- ok, per clang
+			FunctionAttr *attr = NULL;
+			ty = dclr(specifier(&sclass, &attr), &id, NULL, 1, &attr);
 			if ( ty == voidtype && (ty1 || id)
 			||  ty1 == voidtype)
 				error("illegal formal parameter types\n");
@@ -465,7 +847,19 @@ static Symbol *parameters(Type fty) {
 		skipto('{', stop);
 	}
 	if (t == ')')
+	{
 		t = gettok();
+		// check for orca/c INLINE.
+		if (t == INLINE) {
+			FunctionAttr *fa = attr ? *attr : NULL;
+			if (!fa) {
+				NEW0(fa, 0);
+				if (attr) *attr = fa;
+			}
+			t = gettok();
+			funcattr_inline(fa); // todo -- flag for orca compat?
+		}
+	}
 	return params;
 }
 static void exitparams(Symbol params[]) {
@@ -557,11 +951,11 @@ static void fields(Type ty) {
 	{ int n = 0;
 	  while (istypename(t, tsym)) {
 	  	static char stop[] = { IF, CHAR, '}', 0 };
-	  	Type ty1 = specifier(NULL);
+	  	Type ty1 = specifier(NULL, NULL);
 	  	for (;;) {
 	  		Field p;
 	  		char *id = NULL;
-	  		Type fty = dclr(ty1, &id, NULL, 0);
+	  		Type fty = dclr(ty1, &id, NULL, 0, NULL);
 			p = newfield(id, ty, fty);
 			if (Aflag >= 1 && !hasproto(p->type))
 				warning("missing prototype\n");
@@ -658,6 +1052,10 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	int i, n;
 	Symbol *callee, *caller, p;
 	Type rty = freturn(ty);
+	int wants_callb = IR->wants_callb;
+
+	if (IR->x.wants_callb)
+		wants_callb = IR->x.wants_callb(ty);
 
 	if (isstruct(rty) && rty->size == 0)
 		error("illegal use of incomplete type `%t'\n", rty);
@@ -710,7 +1108,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 			for (i = 0; i < n; i++)
 				proto[i] = caller[i]->type;
 			proto[i] = NULL;
-			ty = func(rty, proto, 1);
+			ty = func(rty, proto, 1, ty->u.f.attr); 
 		}
 	} else {
 		callee = params;
@@ -764,7 +1162,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	regcount = 0;
 	codelist = &codehead;
 	codelist->next = NULL;
-	if (!IR->wants_callb && isstruct(rty))
+	if (!wants_callb && isstruct(rty))
 		retv = genident(AUTO, ptr(unqual(rty)), PARAM);
 	compound(0, NULL, 0);
 
@@ -775,7 +1173,7 @@ static void funcdefn(int sclass, char *id, Type ty, Symbol params[], Coordinate 
 	exitscope();
 	assert(level == PARAM);
 	foreach(identifiers, level, checkref, NULL);
-	if (!IR->wants_callb && isstruct(rty)) {
+	if (!wants_callb && isstruct(rty)) {
 		Symbol *a;
 		a = newarray(n + 2, sizeof *a, FUNC);
 		a[0] = retv;
@@ -824,6 +1222,7 @@ static void oldparam(Symbol p, void *cl) {
 void compound(int loop, struct swtch *swp, int lev) {
 	Code cp;
 	int nregs;
+	int wants_callb = IR->wants_callb;
 
 	walk(NULL, 0, 0);
 	cp = code(Blockbeg);
@@ -834,7 +1233,12 @@ void compound(int loop, struct swtch *swp, int lev) {
 	definept(NULL);
 	expect('{');
 	autos = registers = NULL;
-	if (level == LOCAL && IR->wants_callb
+
+	// fix wants_callb.
+	if (level == LOCAL && IR->x.wants_callb)
+		wants_callb = IR->x.wants_callb(cfunc->type);
+
+	if (level == LOCAL && wants_callb
 	&& isstruct(freturn(cfunc->type))) {
 		retv = genident(AUTO, ptr(unqual(freturn(cfunc->type))), level);
 		retv->defined = 1;
@@ -908,11 +1312,14 @@ static void checkref(Symbol p, void *cl) {
 			warning("local `%t %s' is not referenced\n",
 				p->type, p->name);
 	}
+	// IIgs - don't promote to register (IR->noreg?)
+	#if 0
 	if (p->sclass == AUTO
 	&& (p->scope  == PARAM && regcount == 0
 	 || p->scope  >= LOCAL)
 	&& !p->addressed && isscalar(p->type) && p->ref >= 3.0)
 		p->sclass = REGISTER;
+	#endif
 	if (level == GLOBAL && p->sclass == STATIC && !p->defined
 	&& isfunc(p->type) && p->ref)
 		error("undefined static `%t %s'\n", p->type, p->name);
@@ -1151,10 +1558,11 @@ Type enumdcl(void) {
 }
 
 Type typename(void) {
-	Type ty = specifier(NULL);
+	// FunctionAttr support here?
+	Type ty = specifier(NULL, NULL);
 
 	if (t == '*' || t == '(' || t == '[') {
-		ty = dclr(ty, NULL, NULL, 1);
+		ty = dclr(ty, NULL, NULL, 1, NULL);
 		if (Aflag >= 1 && !hasproto(ty))
 			warning("missing prototype\n");
 	}

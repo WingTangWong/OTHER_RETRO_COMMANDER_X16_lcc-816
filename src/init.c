@@ -17,6 +17,10 @@ void defpointer(Symbol p) {
 
 /* genconst - generate/check constant expression e; return size */
 static int genconst(Tree e, int def) {
+Tree simplify2(int op, Type ty, Tree l, Tree r, int addp);
+
+	// normal simplify doesn't simplify ADDP.
+	if (e->op == ADD+P) e = simplify2(e->op, e->type, e->kids[0], e->kids[1], 1);
 	for (;;)
 		switch (generic(e->op)) {
 		case ADDRG:

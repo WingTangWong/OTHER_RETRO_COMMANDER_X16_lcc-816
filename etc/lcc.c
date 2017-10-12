@@ -71,7 +71,7 @@ char *tempdir = TEMPDIR;	/* directory for temporary files */
 static char *progname;
 static List lccinputs;		/* list of input directories */
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	int i, j, nf;
 	
 	progname = argv[0];
@@ -391,47 +391,54 @@ static char *first(char *list) {
 static int filename(char *name, char *base) {
 	int status = 0;
 	static char *stemp, *itemp;
+	char *ofile;
 
 	if (base == 0)
 		base = basepath(name);
 	switch (suffix(name, suffixes, 4)) {
 	case 0:	/* C source files */
-		compose(cpp, plist, append(name, 0), 0);
-		if (Eflag) {
-			status = callsys(av);
-			break;
-		}
-		if (itemp == NULL)
-			itemp = tempname(first(suffixes[1]));
-		compose(cpp, plist, append(name, 0), append(itemp, 0));
+		ofile = itemp;
+
+		// -E outputs to stdout by default.
+		if (Eflag)
+			ofile = outfile ? outfile : NULL; /* concat(base, first(suffixes[1])); */
+		else if (itemp == NULL)
+			itemp = ofile = tempname(first(suffixes[1]));
+
+		compose(cpp, plist, append(name, 0), ofile ? append(ofile, 0) : NULL);
 		status = callsys(av);
+		if (Eflag) break;
+
 		if (status == 0)
 			return filename(itemp, base);
 		break;
 	case 1:	/* preprocessed source files */
+		ofile = stemp;
 		if (Eflag)
 			break;
 		if (Sflag)
-			status = compile(name, outfile ? outfile : concat(base, first(suffixes[2])));
-		else if ((status = compile(name, stemp?stemp:(stemp=tempname(first(suffixes[2]))))) == 0)
+			ofile = outfile ? outfile : concat(base, first(suffixes[2]));
+		else if (stemp == NULL)
+			stemp = ofile = tempname(first(suffixes[2]));
+
+		status = compile(name, ofile);
+		if (Sflag) break;
+		if (status == 0)
 			return filename(stemp, base);
 		break;
 	case 2:	/* assembly language files */
 		if (Eflag)
 			break;
-		if (!Sflag) {
-			char *ofile;
-			if (cflag && outfile)
-				ofile = outfile;
-			else if (cflag)
-				ofile = concat(base, first(suffixes[3]));
-			else
-				ofile = tempname(first(suffixes[3]));
-			compose(as, alist, append(name, 0), append(ofile, 0));
-			status = callsys(av);
-			if (!find(ofile, llist[1]))
-				llist[1] = append(ofile, llist[1]);
-		}
+		if (Sflag)
+			break;
+		if (cflag) ofile = outfile ? outfile : concat(base, first(suffixes[3]));
+		else
+			ofile = tempname(first(suffixes[3]));
+
+		compose(as, alist, append(name, 0), append(ofile, 0));
+		status = callsys(av);
+		if (!find(ofile, llist[1]))
+			llist[1] = append(ofile, llist[1]);
 		break;
 	case 3:	/* object files */
 		if (!find(name, llist[1]))

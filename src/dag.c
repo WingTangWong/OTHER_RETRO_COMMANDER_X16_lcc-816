@@ -13,6 +13,7 @@ static struct dag {
 } *buckets[16];
 int nodecount;
 static Tree firstarg;
+static int left_to_right = 0;
 int assignargs = 1;
 int prunetemps = -1;
 static Node *tail;
@@ -203,48 +204,74 @@ Node listnodes(Tree tp, int tlab, int flab) {
 		      l = listnodes(tp->kids[0], 0, 0);
 		      list(newnode(JUMP+V, l, NULL, NULL));
 		      reset(); } break;
-	case CALL:  { Tree save = firstarg;
-		      firstarg = NULL;
-		      assert(tlab == 0 && flab == 0);
-		      if (tp->op == CALL+B && !IR->wants_callb) {
-		      	Tree arg0 = tree(ARG+P, tp->kids[1]->type,
-				tp->kids[1], NULL);
-			if (IR->left_to_right)
-				firstarg = arg0;
-			l = listnodes(tp->kids[0], 0, 0);
-			if (!IR->left_to_right || firstarg) {
+	case CALL:  {
+				Node xcall = NULL;
+				Tree save = firstarg;
+				int save_left_to_right = left_to_right;
+
 				firstarg = NULL;
-				listnodes(arg0, 0, 0);
-			}
-		      	p = newnode(CALL+V, l, NULL, NULL);
-		      } else {
-		      	l = listnodes(tp->kids[0], 0, 0);
-		      	r = listnodes(tp->kids[1], 0, 0);
-		      	p = newnode(tp->op == CALL+B ? tp->op : op, l, r, NULL);
-		      }
-		      NEW0(p->syms[0], FUNC);
-		      assert(isptr(tp->kids[0]->type));
-		      assert(isfunc(tp->kids[0]->type->type));
-		      p->syms[0]->type = tp->kids[0]->type->type;
-		      list(p);
-		      reset();
-		      cfunc->u.f.ncalls++;
-		      firstarg = save;
- } break;
+				assert(tlab == 0 && flab == 0);
+				//printtree(tp, 1);
+
+				left_to_right = IR->left_to_right;
+				int wants_callb = IR->wants_callb;
+
+				if (IR->x.left_to_right)
+					left_to_right = IR->x.left_to_right(tp->kids[0]->type->type);
+
+				if (IR->x.wants_callb)
+					wants_callb = IR->x.wants_callb(tp->kids[0]->type->type);
+
+				// create entry before the call.
+				if (IR->wants_xcall) {
+					xcall = newnode(XCALL+V, NULL, NULL, NULL);
+					list(xcall);
+				}
+
+				if (tp->op == CALL+B && !wants_callb) {
+					Tree arg0 = tree(ARG+P, tp->kids[1]->type,
+						tp->kids[1], NULL);
+					if (left_to_right)
+						firstarg = arg0;
+					l = listnodes(tp->kids[0], 0, 0);
+					if (!left_to_right || firstarg) {
+						firstarg = NULL;
+						listnodes(arg0, 0, 0);
+					}
+					p = newnode(CALL+V, l, NULL, NULL);
+				} else {
+					l = listnodes(tp->kids[0], 0, 0);
+					r = listnodes(tp->kids[1], 0, 0);
+					p = newnode(tp->op == CALL+B ? tp->op : op, l, r, NULL);
+				}
+				NEW0(p->syms[0], FUNC);
+				assert(isptr(tp->kids[0]->type));
+				assert(isfunc(tp->kids[0]->type->type));
+				p->syms[0]->type = tp->kids[0]->type->type;
+				list(p);
+				reset();
+				cfunc->u.f.ncalls++;
+				firstarg = save;
+				left_to_right = save_left_to_right;
+
+ 			} break;
+
 	case ARG:   { assert(tlab == 0 && flab == 0);
-		      if (IR->left_to_right)
-		      	listnodes(tp->kids[1], 0, 0);
-		      if (firstarg) {
-		      	Tree arg = firstarg;
-		      	firstarg = NULL;
-		      	listnodes(arg, 0, 0);
-		      }
-		      l = listnodes(tp->kids[0], 0, 0);
-		      list(newnode(tp->op == ARG+B ? tp->op : op, l, NULL, NULL));
-		      forest->syms[0] = intconst(tp->type->size);
-		      forest->syms[1] = intconst(tp->type->align);
-		      if (!IR->left_to_right)
-		      	listnodes(tp->kids[1], 0, 0); } break;
+				if (left_to_right)
+					listnodes(tp->kids[1], 0, 0);
+				if (firstarg) {
+					Tree arg = firstarg;
+					firstarg = NULL;
+					listnodes(arg, 0, 0);
+				}
+				l = listnodes(tp->kids[0], 0, 0);
+				list(newnode(tp->op == ARG+B ? tp->op : op, l, NULL, NULL));
+				forest->syms[0] = intconst(tp->type->size);
+				forest->syms[1] = intconst(tp->type->align);
+				if (!left_to_right)
+					listnodes(tp->kids[1], 0, 0); 
+			} break;
+
 	case EQ:  case NE: case GT: case GE: case LE:
 	case LT:    { assert(tp->u.sym == 0);
 		      assert(errcnt || tlab || flab);
@@ -646,6 +673,14 @@ static Node visit(Node p, int listed) {
 			p->kids[0] = visit(p->kids[0], 0);
 			p->kids[1] = visit(p->kids[1], 0);
 		}
+		// iigs -- do not "optimize" dp or constants.
+		// since that would generate a REGISTER.
+		else if (IR->x.preventCSE && IR->x.preventCSE(p)) {
+			p = newnode(p->op, p->kids[0], p->kids[1], p->syms[0]);
+			p->count = 1;
+			p->kids[0] = visit(p->kids[0], 0);
+			p->kids[1] = visit(p->kids[1], 0);
+		}
 		else {
 			p->kids[0] = visit(p->kids[0], 0);
 			p->kids[1] = visit(p->kids[1], 0);
@@ -653,7 +688,7 @@ static Node visit(Node p, int listed) {
 			assert(!p->syms[2]->defined);
 			p->syms[2]->ref = 1;
 			p->syms[2]->u.t.cse = p;
-
+		
 			*tail = asgnnode(p->syms[2], p);
 			tail = &(*tail)->link;
 			if (!listed)

@@ -89,7 +89,7 @@ setup(int argc, char **argv)
 }
 
 
-
+#ifndef __clang__
 /* memmove is defined here because some vendors don't provide it at
    all and others do a terrible job (like calling malloc) */
 void *
@@ -97,8 +97,8 @@ memmove(void *dp, const void *sp, size_t n)
 {
 	unsigned char *cdp, *csp;
 
-	if (n==0)
-		return 0;
+	if (n<=0)
+		return dp;
 	cdp = dp;
 	csp = (unsigned char *)sp;
 	if (cdp < csp) {
@@ -112,5 +112,6 @@ memmove(void *dp, const void *sp, size_t n)
 			*--cdp = *--csp;
 		} while (--n);
 	}
-	return 0;
+	return dp;
 }
+#endif

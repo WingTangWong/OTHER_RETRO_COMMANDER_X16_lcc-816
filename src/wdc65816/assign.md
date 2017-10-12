@@ -1,0 +1,354 @@
+
+# 8-bits
+
+# todo -- if vregp is %v or %p, must use 8-bit store.
+stmt: ASGNI1(vregp, rc) {
+    ;sep #$20
+    lda %1
+    ;rep #$20
+    sta %0
+} 4
+
+stmt: ASGNU1(vregp, rc) {
+    ;sep #$20
+    lda %1
+    ;rep #$20
+    sta %0
+} 4
+
+# ASGNU1(ADDRGP4(mon), CNSTU1(0)
+
+stmt: ASGNU1(address_with_modifier, rc) {
+    lda %1
+    sep #$20
+    sta %0
+    rep #$20
+} 4
+
+stmt: ASGNI1(address_with_modifier, rc) {
+    lda %1
+    sep #$20
+    sta %0
+    rep #$20
+} 4
+
+
+
+#16-bit
+
+stmt: ASGNU2(address_with_modifier, rc) {
+    lda %1
+    sta %0
+} 2
+
+stmt: ASGNI2(address_with_modifier, rc) {
+    lda %1
+    sta %0
+} 2
+
+stmt: ASGNU2(vregp, rc) {
+    lda %1
+    sta %0
+} 2
+
+stmt: ASGNI2(vregp, rc) {
+    lda %1
+    sta %0
+} 2
+
+# this is here since constant addresses are no longer simplified.
+#stmt: ASGNU2(ADDP4(vregp, const), rc) {
+#    lda %2
+#    sta %0+%1
+#} 2
+
+#stmt: ASGNI2(ADDP4(vregp, const), rc) {
+#    lda %2
+#    sta %0+%1
+#} 2
+
+
+# 32-bits
+# need separate const vs reg for high-word
+
+stmt: ASGNP4(vregp, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNU4(vregp, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNI4(vregp, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+
+stmt: ASGNP4(vregp, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+
+stmt: ASGNU4(vregp, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+stmt: ASGNI4(vregp, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+
+stmt: ASGNP4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNU4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+stmt: ASGNI4(address_with_modifier, const) {
+    lda #%1
+    sta %0
+    lda #^%1
+    sta %0+2
+} 4
+
+
+stmt: ASGNP4(address_with_modifier, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+
+stmt: ASGNU4(address_with_modifier, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+stmt: ASGNI4(address_with_modifier, reg) {
+    lda %1
+    sta %0
+    lda %1+2
+    sta %0+2
+} 4
+
+
+
+
+
+
+# 0-optimizations.
+
+# todo -- need to rep/sep if vregp is struct or array.
+# todo -- these are sometimes detrimental to the optimizer!
+stmt: ASGNU1(vregp, const_0) {
+    stz %0
+} 1
+
+stmt: ASGNI1(vregp, const_0) {
+    stz %0
+} 1
+
+stmt: ASGNU2(vregp, const_0) {
+    stz %0
+} 1
+
+stmt: ASGNI2(vregp, const_0) {
+    stz %0
+} 1
+
+stmt: ASGNU2(address, const_0) {
+    stz |%0
+} short_mm_only(1)
+
+stmt: ASGNI2(address, const_0) {
+    stz |%0
+} short_mm_only(1)
+
+
+
+#stmt: ASGNU2(vregp, const_1) {
+#    stz %0
+#    inc %0
+#} 2
+
+#stmt: ASGNI2(vregp, const_1) {
+#    stz %0
+#    inc %0
+#} 2
+
+
+
+
+# indirection...
+
+stmt: ASGNI2(reg, rc) {
+    lda %1
+    sta [%0]
+} 2+1
+
+stmt: ASGNU2(reg, rc) {
+    lda %1
+    sta [%0]
+} 2+1
+
+
+stmt: ASGNI1(reg, rc) {
+    lda %1
+    sep #$20
+    sta [%0]
+    rep #$20
+} 4+1
+
+stmt: ASGNU1(reg, rc) {
+    lda %1
+    sep #$20
+    sta [%0]
+    rep #$20
+} 4+1
+
+
+stmt: ASGNI4(reg, reg) {
+    lda %1
+    sta [%0]
+    ldy #2
+    lda %1+2
+    sta [%0],y
+} 5
+
+stmt: ASGNI4(reg, const) {
+    lda #%1
+    sta [%0]
+    ldy #2
+    lda #^%1
+    sta [%0],y
+} 5
+
+
+
+# y-indirection.
+
+stmt: ASGNU2(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sta [%0],y
+} 3+1
+
+stmt: ASGNI2(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sta [%0],y
+} 3+1
+
+stmt: ASGNU1(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sep #$20
+    sta [%0],y
+    rep #$20
+} 4+1
+
+stmt: ASGNI1(ADDP4(reg, const_16_bit), rc) {
+    lda %2
+    ldy #%1
+    sep #$20
+    sta [%0],y
+    rep #$20
+} 4+1
+
+# 8-bit offset
+stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), INDIRP4(vregp)), rc) {
+    lda %0
+    and #$ff
+    tay
+    lda %2
+    sep #$20
+    sta [%1],y
+    rep #$20
+} 7+1
+
+stmt: ASGNI1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), INDIRP4(vregp)), rc) {
+    lda %0
+    and #$ff
+    tay
+    lda %2
+    sep #$20
+    sta [%1],y
+    rep #$20
+} 7+1
+
+stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)), rc) {
+    lda %2
+    ldy %0
+    sep #$20
+    sta [%1],y
+    rep #$20    
+} 5+1
+
+stmt: ASGNI1(ADDP4(CVUU4(INDIRU2(vregp)), INDIRP4(vregp)), rc) {
+    lda %2
+    ldy %0
+    sep #$20
+    sta [%1],y
+    rep #$20    
+} 5+1
+
+
+# see also indir.
+# static char buffer; buffer[uint16_t | uint8_t] = rc
+stmt: ASGNU1(ADDP4(CVUU4(INDIRU2(vregp)), address_with_modifier), rc) {
+    ldx %0
+    lda %2
+    sep #$20
+    sta %1,x
+    rep #$20
+} 5
+
+stmt: ASGNU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier), rc) {
+    lda %0
+    and #$ff
+    tax
+    lda %2
+    sep #$20
+    sta %1,x
+    rep #$20
+} 6
+
+# small-memory model write
+stmt: ASGNU1(ADDP4(CVII4(INDIRI2(vregp)), address), rc) {
+    ldx %0
+    lda %2
+    sep #$20
+    sta |%1,x
+    rep #$20
+} short_mm_only(5)
+
+

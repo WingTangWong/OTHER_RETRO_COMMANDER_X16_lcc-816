@@ -1,4 +1,6 @@
 # $Id$
+BUILDDIR ?= o
+HOSTFILE ?= etc/iigs.c
 A=.a
 O=.o
 E=
@@ -17,15 +19,16 @@ B=$(BUILDDIR)/
 T=$(TSTDIR)/
 
 what:
-	-@echo make all rcc lburg cpp lcc bprint liblcc triple clean clobber
+	-@echo make all rcc lburg cpp lcc bprint ops liblcc triple clean clobber
 
-all::	rcc lburg cpp lcc bprint liblcc
+all::	rcc lburg cpp lcc bprint ops liblcc
 
 rcc:	$Brcc$E
 lburg:	$Blburg$E
 cpp:	$Bcpp$E
 lcc:	$Blcc$E
 bprint:	$Bbprint$E
+ops:	$Bops$E
 liblcc:	$Bliblcc$A
 
 RCCOBJS=$Balloc$O \
@@ -55,14 +58,16 @@ RCCOBJS=$Balloc$O \
 	$Btypes$O \
 	$Bnull$O \
 	$Bsymbolic$O \
-	$Bgen$O \
 	$Bbytecode$O \
+	$Bmsil$O \
+	$Bgen$O \
 	$Balpha$O \
 	$Bmips$O \
 	$Bsparc$O \
 	$Bstab$O \
 	$Bx86$O \
-	$Bx86linux$O
+	$Bx86linux$O \
+	$Bwdc65816$O
 
 $Brcc$E::	$Bmain$O $Blibrcc$A $(EXTRAOBJS)
 		$(LD) $(LDFLAGS) -o $@ $Bmain$O $(EXTRAOBJS) $Blibrcc$A $(EXTRALIBS)
@@ -97,6 +102,7 @@ $Bstring$O:	src/string.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/string.c
 $Bsym$O:	src/sym.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/sym.c
 $Bsymbolic$O:	src/symbolic.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/symbolic.c
 $Bbytecode$O:	src/bytecode.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/bytecode.c
+$Bmsil$O:	src/msil.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/msil.c
 $Btrace$O:	src/trace.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/trace.c
 $Btree$O:	src/tree.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/tree.c
 $Btypes$O:	src/types.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ src/types.c
@@ -108,6 +114,7 @@ $Bmips$O:	$Bmips.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bmips.c
 $Bsparc$O:	$Bsparc.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bsparc.c
 $Bx86$O:	$Bx86.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86.c
 $Bx86linux$O:	$Bx86linux.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86linux.c
+$Bwdc65816$O:	$Bwdc65816.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bwdc65816.c
 
 $Bdagcheck.c:	$Blburg$E src/dagcheck.md; $Blburg src/dagcheck.md $@
 $Balpha.c:	$Blburg$E src/alpha.md;    $Blburg src/alpha.md    $@
@@ -115,6 +122,13 @@ $Bmips.c:	$Blburg$E src/mips.md;     $Blburg src/mips.md     $@
 $Bsparc.c:	$Blburg$E src/sparc.md;    $Blburg src/sparc.md    $@
 $Bx86.c:	$Blburg$E src/x86.md;      $Blburg src/x86.md      $@
 $Bx86linux.c:	$Blburg$E src/x86linux.md; $Blburg src/x86linux.md $@
+
+DEP816=add-sub.md arg.md assign.md bitops.md builtin.md call.md\
+const.md indir.md load.md multiply.md shift.md branch.md convert.md\
+return.md struct.md memop.md tadpole.md regAX.md array.md
+
+$Bwdc65816.c:	$Blburg$E src/wdc65816.md $(DEP816:%=src/wdc65816/%)
+	$Blburg src/wdc65816.md $@
 
 $Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
 $Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
@@ -141,6 +155,8 @@ $Blburg$O $Bgram$O:	lburg/lburg.h
 
 $Blburg$O:	lburg/lburg.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/lburg.c
 $Bgram$O:	lburg/gram.c;	$(CC) $(CFLAGS) -c -Ilburg -o $@ lburg/gram.c
+
+lburg/gram.c: lburg/gram.y;	$(YACC) $< -o $@
 
 CPPOBJS=$Bcpp$O $Blexer$O $Bnlist$O $Btokens$O $Bmacro$O $Beval$O \
 	$Binclude$O $Bhideset$O $Bgetopt$O $Bunix$O
@@ -221,7 +237,7 @@ testclean:
 
 clean::		testclean
 		$(RM) $B*$O
-		$(RM) $Bdagcheck.c $Balpha.c $Bmips.c $Bx86.c $Bsparc.c $Bx86linux.c
+		$(RM) $Bdagcheck.c $Balpha.c $Bmips.c $Bx86.c $Bsparc.c $Bx86linux.c $Bwdc65816.c
 		$(RM) $Brcc1$E $Brcc1$E $B1rcc$E $B2rcc$E
 		$(RM) $B*.ilk
 
@@ -256,14 +272,16 @@ RCCSRCS=src/alloc.c \
 	src/null.c \
 	src/symbolic.c \
 	src/bytecode.c \
+	src/msil.c \
 	src/gen.c \
 	src/stab.c \
 	$Bdagcheck.c \
 	$Balpha.c \
 	$Bmips.c \
 	$Bsparc.c \
+	$Bx86.c \
 	$Bx86linux.c \
-	$Bx86.c
+	$Bwdc65816.c
 
 C=$Blcc -A -d0.6 -Wo-lccdir=$(BUILDDIR) -Isrc -I$(BUILDDIR)
 triple:	$B2rcc$E

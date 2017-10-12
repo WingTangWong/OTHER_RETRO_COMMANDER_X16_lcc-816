@@ -37,6 +37,19 @@ static char *outu(unsigned long n, int base, FILE *f, char *bp) {
 	while ((n /= base) != 0);
 	return outs(s, f, bp);
 }
+
+
+// tnprint - include a leading \t and trailing \n
+void tnprint(const char *fmt, ...) {
+	va_list ap;
+
+	fputc('\t', stdout);
+	va_start(ap, fmt);
+	vfprint(stdout, NULL, fmt, ap);
+	va_end(ap);
+	fputc('\n', stdout);
+}
+
 void print(const char *fmt, ...) {
 	va_list ap;
 

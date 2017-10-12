@@ -73,7 +73,7 @@ process(Tokenrow *trp)
 			trp->tp += 1;
 			control(trp);
 		} else if (!skipping && anymacros)
-			expandrow(trp, NULL);
+			expandrow(trp, NULL, Notinmacro);
 		if (skipping)
 			setempty(trp);
 		puttokens(trp);
@@ -148,6 +148,7 @@ control(Tokenrow *trp)
 		break;
 
 	case KPRAGMA:
+		dopragma(trp);
 		return;
 
 	case KIFDEF:
@@ -207,12 +208,17 @@ control(Tokenrow *trp)
 
 	case KERROR:
 		trp->tp = tp+1;
-		error(WARNING, "#error directive: %r", trp);
+		error(ERROR, "#error directive: %r", trp);
+		break;
+
+	case KWARNING:
+		trp->tp = tp+1;
+		error(WARNING, "#warning directive: %r", trp);
 		break;
 
 	case KLINE:
 		trp->tp = tp+1;
-		expandrow(trp, "<line>");
+		expandrow(trp, "<line>", Notinmacro);
 		tp = trp->bp+2;
 	kline:
 		if (tp+1>=trp->lp || tp->type!=NUMBER || tp+3<trp->lp
@@ -233,7 +239,12 @@ control(Tokenrow *trp)
 		break;
 
 	case KINCLUDE:
-		doinclude(trp);
+		doinclude(trp, Include);
+		trp->lp = trp->bp;
+		return;
+
+	case KIMPORT:
+		doinclude(trp, Import);
 		trp->lp = trp->bp;
 		return;
 
@@ -247,6 +258,16 @@ control(Tokenrow *trp)
 	}
 	setempty(trp);
 	return;
+}
+
+void *
+dorealloc(void *ptr, int size)
+{
+	void *p = realloc(ptr, size);
+
+	if (p==NULL)
+		error(FATAL, "Out of memory from realloc");
+	return p;
 }
 
 void *

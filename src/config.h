@@ -8,18 +8,22 @@ typedef struct {
 	void (*blkloop)(int dreg, int doff,
 	                 int sreg, int soff,
 	                 int size, int tmps[]);
-	void (*_label)(Node);
+	int (*_label)(Node);
 	int (*_rule)(void*, int);
 	short **_nts;
 	void (*_kids)(Node, int, Node*);
 	char **_string;
 	char **_templates;
+	void (**_functions)(Node);
 	char *_isinstruction;
 	char **_ntname;
 	void (*emit2)(Node);
 	void (*doarg)(Node);
 	void (*target)(Node);
 	void (*clobber)(Node);
+	int (*preventCSE)(Node);
+	int (*left_to_right)(Type);
+	int (*wants_callb)(Type);
 } Xinterface;
 extern int     askregvar(Symbol, Symbol);
 extern void    blkcopy(int, int, int, int, int, int[]);
@@ -48,6 +52,10 @@ extern unsigned freemask[], usedmask[];
 extern int      offset, maxoffset;
 extern int      swap;
 extern unsigned tmask[], vmask[];
+
+/* iigs - was 2 */
+#define REGISTER_SETS 4
+
 typedef struct {
 	unsigned listed:1;
 	unsigned registered:1;
@@ -82,7 +90,7 @@ typedef struct {
 enum { RX=2 };
 typedef struct {
 	int offset;
-	unsigned freemask[2];
+	unsigned freemask[REGISTER_SETS];
 } Env;
 
 #define LBURG_MAX SHRT_MAX

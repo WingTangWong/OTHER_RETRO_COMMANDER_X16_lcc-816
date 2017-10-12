@@ -1024,6 +1024,8 @@ Interface mipsebIR = {
         1,  /* left_to_right */
         0,  /* wants_dag */
         0,  /* unsigned_char */
+        0,  /* wants_xcall */
+
         address,
         blockbeg,
         blockend,
@@ -1053,6 +1055,7 @@ Interface mipsebIR = {
                 _kids,
                 _string,
                 _templates,
+                _functions,
                 _isinstruction,
                 _ntname,
                 emit2,
@@ -1079,6 +1082,8 @@ Interface mipsebIR = {
         1,  /* left_to_right */
         0,  /* wants_dag */
         0,  /* unsigned_char */
+        0,  /* wants_xcall */
+
         address,
         blockbeg,
         blockend,
@@ -1108,6 +1113,7 @@ Interface mipsebIR = {
                 _kids,
                 _string,
                 _templates,
+                _functions,
                 _isinstruction,
                 _ntname,
                 emit2,

@@ -121,6 +121,7 @@ typedef struct interface {
 	unsigned left_to_right:1;
 	unsigned wants_dag:1;
 	unsigned unsigned_char:1;
+	unsigned wants_xcall:1;
 void (*address)(Symbol p, Symbol q, long n);
 void (*blockbeg)(Env *);
 void (*blockend)(Env *);
@@ -323,6 +324,25 @@ enum {
 	RIGHT=42<<4,
 	FIELD=43<<4
 };
+
+typedef struct functionattr FunctionAttr;
+struct functionattr {
+	unsigned pascal:1;
+	unsigned stdcall:1;
+	unsigned cdecl:1;
+	unsigned noreturn:1;
+	unsigned near:1;
+	unsigned databank:1;
+	unsigned debug:1;
+	unsigned function_inline:1;
+
+	unsigned function_vector;
+	unsigned registerX;
+	unsigned registerY;
+	unsigned registerA;
+	char *segment;
+};
+
 struct type {
 	int op;
 	Type type;
@@ -333,6 +353,7 @@ struct type {
 		struct {
 			unsigned oldstyle:1;
 			Type *proto;
+			FunctionAttr *attr;
 		} f;
 	} u;
 	Xtype x;
@@ -515,6 +536,7 @@ extern int findcount(char *, int, int);
 
 extern Tree constexpr(int);
 extern int intexpr(int, int);
+extern long longexpr(int, long);
 extern Tree simplify(int, Type, Tree, Tree);
 extern int ispow2(unsigned long u);
 
@@ -582,12 +604,13 @@ extern Type array(Type, int, int);
 extern Type atop(Type);
 extern Type btot(int, int);
 extern Type compose(Type, Type);
+extern FunctionAttr *compose_attr(FunctionAttr *, FunctionAttr *);
 extern Type deref(Type);
 extern int eqtype(Type, Type, int);
 extern Field fieldlist(Type);
 extern Type freturn(Type);
 extern Type ftype(Type, ...);
-extern Type func(Type, Type *, int);
+extern Type func(Type, Type *, int, FunctionAttr *attr);
 extern Field newfield(char *, Type, Type);
 extern Type newstruct(int, char *);
 extern void printtype(Type, int);

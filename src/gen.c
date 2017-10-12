@@ -1,5 +1,5 @@
 #include "c.h"
-
+#include <ctype.h>
 static char rcsid[] = "$Id$";
 
 #define readsreg(p) \
@@ -72,10 +72,11 @@ static char NeedsReg[] = {
 };
 Node head;
 
-unsigned freemask[2];
-unsigned usedmask[2];
-unsigned tmask[2];
-unsigned vmask[2];
+
+unsigned freemask[REGISTER_SETS];
+unsigned usedmask[REGISTER_SETS];
+unsigned tmask[REGISTER_SETS];
+unsigned vmask[REGISTER_SETS];
 Symbol mkreg(char *fmt, int n, int mask, int set) {
 	Symbol p;
 
@@ -102,16 +103,26 @@ void mkauto(Symbol p) {
 	p->x.name = stringd(-offset);
 }
 void blockbeg(Env *e) {
+	unsigned i;
 	e->offset = offset;
-	e->freemask[IREG] = freemask[IREG];
-	e->freemask[FREG] = freemask[FREG];
+
+	for (i = 0; i < REGISTER_SETS; ++i)
+		e->freemask[i] = freemask[i];
+
+	//e->freemask[IREG] = freemask[IREG];
+	//e->freemask[FREG] = freemask[FREG];
 }
 void blockend(Env *e) {
+	unsigned i;
 	if (offset > maxoffset)
 		maxoffset = offset;
 	offset = e->offset;
-	freemask[IREG] = e->freemask[IREG];
-	freemask[FREG] = e->freemask[FREG];
+
+	for (i = 0; i < REGISTER_SETS; ++i)
+		freemask[i] = e->freemask[i];
+
+	//freemask[IREG] = e->freemask[IREG];
+	//freemask[FREG] = e->freemask[FREG];
 }
 int mkactual(int align, int size) {
 	int n = roundup(argoffset, align);
@@ -124,6 +135,7 @@ static void docall(Node p) {
 	p->syms[0] = intconst(argoffset);
 	if (argoffset > maxargoffset)
 		maxargoffset = argoffset;
+
 	argoffset = 0;
 }
 void blkcopy(int dreg, int doff, int sreg, int soff, int size, int tmp[]) {
@@ -167,7 +179,7 @@ void parseflags(int argc, char *argv[]) {
 
 	for (i = 0; i < argc; i++)
 		if (strcmp(argv[i], "-d") == 0)
-			dflag = 1;
+			dflag++; /* = 1; */
 		else if (strcmp(argv[i], "-b") == 0)	/* omit */
 			bflag = 1;			/* omit */
 }
@@ -262,6 +274,12 @@ int range(Node p, int lo, int hi) {
 	}
 	return LBURG_MAX;
 }
+
+void gen_dumptree(Node p) {
+	dumptree(p);
+	fprintf(stderr, "\n");
+}
+
 static void dumptree(Node p) {
 	if (p->op == VREG+P && p->syms[0]) {
 		fprint(stderr, "VREGP(%s)", p->syms[0]->name);
@@ -300,6 +318,8 @@ static void dumptree(Node p) {
 		fprint(stderr, ", ");
 		dumptree(p->kids[1]);
 		break;
+	case XCALL:
+		break;
 	default: assert(0);
 	}
 	fprint(stderr, ")");
@@ -328,19 +348,75 @@ static void dumprule(int rulenum) {
 	if (!IR->x._isinstruction[rulenum])
 		fprint(stderr, "\n");
 }
+
+static unsigned nextlabel = 0;
+
+void emitstring(const char *fmt, Node p, Node *kids, short *nts) {
+
+	unsigned maxlabel = 0;
+
+	assert(fmt);
+	if (*fmt == '?') {
+		fmt++;
+		assert(p->kids[0]);
+		if (p->syms[RX] == p->x.kids[0]->syms[RX])
+			while (*fmt++ != '\n')
+				;
+	}
+
+	for ( ; *fmt; fmt++) {
+
+		/* @[a-z] generates a unique local label. */
+		if (*fmt == '@' && isalpha(fmt[1])) {
+			putchar(*fmt++);
+			while(isalpha(*fmt))
+				putchar(*fmt++);
+			maxlabel = 1;
+			print(".%d", nextlabel);
+			//continue;
+		}
+
+		if (*fmt != '%')
+			(void)putchar(*fmt);
+		else if (*++fmt == 'F')
+			print("%d", framesize);
+		else if (*fmt >= '0' && *fmt <= '9')
+			emitasm(kids[*fmt - '0'], nts[*fmt - '0']);
+		else if (*fmt >= 'a' && *fmt < 'a' + NELEMS(p->syms))
+			fputs(p->syms[*fmt - 'a']->x.name, stdout);
+		else
+			(void)putchar(*fmt);
+	}
+
+	nextlabel += maxlabel;
+}
+
 unsigned emitasm(Node p, int nt) {
 	int rulenum;
 	short *nts;
 	char *fmt;
 	Node kids[10];
 
+	unsigned maxlabel = 0;
+
+
+	void (*function)(Node);
+
 	p = reuse(p, nt);
 	rulenum = getrule(p, nt);
 	nts = IR->x._nts[rulenum];
 	fmt = IR->x._templates[rulenum];
+
+	function = IR->x._functions ? IR->x._functions[rulenum] : NULL;
+
 	assert(fmt);
 	if (IR->x._isinstruction[rulenum] && p->x.emitted)
 		print("%s", p->syms[RX]->x.name);
+
+	else if (function) {
+		function(p);
+		return 0;
+	}
 	else if (*fmt == '#')
 		(*IR->x.emit2)(p);
 	else {
@@ -351,7 +427,19 @@ unsigned emitasm(Node p, int nt) {
 				while (*fmt++ != '\n')
 					;
 		}
-		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++)
+		for ((*IR->x._kids)(p, rulenum, kids); *fmt; fmt++) {
+
+			/* @[a-z] generates a unique local label. */
+			if (*fmt == '@' && isalpha(fmt[1])) {
+				putchar(*fmt++);
+				while(isalpha(*fmt))
+					putchar(*fmt++);
+				maxlabel = 1;
+				print(".%d", nextlabel);
+				//continue;
+			}
+
+
 			if (*fmt != '%')
 				(void)putchar(*fmt);
 			else if (*++fmt == 'F')
@@ -362,7 +450,11 @@ unsigned emitasm(Node p, int nt) {
 				fputs(p->syms[*fmt - 'a']->x.name, stdout);
 			else
 				(void)putchar(*fmt);
+		}
 	}
+
+	nextlabel += maxlabel;
+
 	return 0;
 }
 void emit(Node p) {
@@ -377,6 +469,7 @@ void emit(Node p) {
 }
 static int moveself(Node p) {
 	return p->x.copy
+	&& p->x.kids[0] // fix for 65816/dp registers
 	&& p->syms[RX]->x.name == p->x.kids[0]->syms[RX]->x.name;
 }
 int move(Node p) {
@@ -452,6 +545,7 @@ void setreg(Node p, Symbol r) {
 void rtarget(Node p, int n, Symbol r) {
 	Node q = p->kids[n];
 
+	if (!q->syms[RX]) return; // 816 -- struct assignment...
 	assert(q);
 	assert(r);
 	assert(r->sclass == REGISTER || !r->x.wildcard);
@@ -468,11 +562,16 @@ void rtarget(Node p, int n, Symbol r) {
 	debug(fprint(stderr, "(targeting %x->x.kids[%d]=%x to %s)\n", p, n, p->kids[n], r->x.name));
 }
 static void rewrite(Node p) {
+	int ok;
 	assert(p->x.inst == 0);
 	prelabel(p);
 	debug(dumptree(p));
 	debug(fprint(stderr, "\n"));
-	(*IR->x._label)(p);
+	ok = (*IR->x._label)(p);
+	if (dflag && !ok) {
+		fprintf(stderr, "Unable to label node:\n");
+		dumptree(p);
+	}
 	debug(dumpcover(p, 1, 0));
 	reduce(p, 1);
 }

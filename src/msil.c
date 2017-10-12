@@ -279,7 +279,7 @@ static char *tostring(long double d) {
 		else
 			sprintf(buf, "0.0");
 	} else
-		sprintf(buf, "%e", d);
+		sprintf(buf, "%Le", d);
 	return buf;
 }
 
@@ -891,6 +891,8 @@ Interface msilIR = {
 	1,		/* left_to_right */
 	0,		/* wants_dag */
 	0,		/* unsigned_char */
+	0,		/* wants_xcall */
+
 	0,		/* I(address) */
 	I(blockbeg),
 	I(blockend),

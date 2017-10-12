@@ -516,12 +516,19 @@ int
 fillbuf(Source *s)
 {
 	int n, nr;
+	int i;
 
 	nr = INS/8;
 	if ((char *)s->inl+nr > (char *)s->inb+INS)
 		error(FATAL, "Input buffer overflow");
 	if (s->fd==NULL || (n=fread((char *)s->inl, 1, INS/8, s->fd)) <= 0)
 		n = 0;
+
+	// iigs -- cr to lf conversion.
+	for(i = 0; i < n; ++i) {
+		if (s->inl[i] == '\r') s->inl[i] = '\n';
+	}
+
 	if ((*s->inp&0xff) == EOB) /* sentinel character appears in input */
 		*s->inp = EOFC;
 	s->inl += n;

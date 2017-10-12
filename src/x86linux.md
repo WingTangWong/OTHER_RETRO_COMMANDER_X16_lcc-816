@@ -1046,6 +1046,8 @@ Interface x86linuxIR = {
         0,        /* left_to_right */
         0,        /* wants_dag */
         0,        /* unsigned_char */
+        0,        /* wants_xcall */
+
         0, /* address */
         blockbeg,
         blockend,
@@ -1073,6 +1075,7 @@ Interface x86linuxIR = {
             _kids,
             _string,
             _templates,
+            _functions,
             _isinstruction,
             _ntname,
             emit2,

@@ -113,6 +113,8 @@ static void dumptree(Node p) {
 		dumptree(p->kids[0]);
 		print("%s\n", opname(p->op));
 		return;
+	case XCALL:
+		return;
 	case CALL:
 		assert(p->kids[0]);
 		assert(!p->kids[1]);
@@ -254,6 +256,8 @@ Interface bytecodeIR = {
 	1,		/* left_to_right */
 	0,		/* wants_dag */
 	0,		/* unsigned_char */
+	0,		/* wants_xcall */
+
 	I(address),
 	I(blockbeg),
 	I(blockend),

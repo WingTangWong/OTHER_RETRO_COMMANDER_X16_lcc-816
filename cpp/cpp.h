@@ -26,17 +26,21 @@ enum toktype { END, UNCLASS, NAME, NUMBER, STRING, CCON, NL, WS, DSHARP,
 		DSHARP1, NAME1, DEFINED, UMINUS };
 
 enum kwtype { KIF, KIFDEF, KIFNDEF, KELIF, KELSE, KENDIF, KINCLUDE, KDEFINE,
-		KUNDEF, KLINE, KERROR, KPRAGMA, KDEFINED,
-		KLINENO, KFILE, KDATE, KTIME, KSTDC, KEVAL };
+		KUNDEF, KLINE, KERROR, KWARNING, KPRAGMA, KDEFINED,
+		KLINENO, KFILE, KDATE, KTIME, KSTDC, KEVAL, KIMPORT, KCOUNTER };
 
 #define	ISDEFINED	01	/* has #defined value */
 #define	ISKW		02	/* is PP keyword */
 #define	ISUNCHANGE	04	/* can't be #defined in PP */
 #define	ISMAC		010	/* builtin macro, e.g. __LINE__ */
+#define	ISVARMAC	020	/* variadic macro */
 
 #define	EOB	0xFE		/* sentinel for end of input buffer */
 #define	EOFC	0xFD		/* sentinel for end of input file */
 #define	XPWS	1		/* token flag: white space to assure token sep. */
+
+enum { Notinmacro, Inmacro };
+enum { Include, Import };
 
 typedef struct token {
 	unsigned char	type;
@@ -98,6 +102,7 @@ Source	*setsource(char *, FILE *, char *);
 void	unsetsource(void);
 void	puttokens(Tokenrow *);
 void	process(Tokenrow *);
+void	*dorealloc(void *, int);
 void	*domalloc(int);
 void	dofree(void *);
 void	error(enum errtype, char *, ...);
@@ -109,13 +114,14 @@ Nlist	*lookup(Token *, int);
 void	control(Tokenrow *);
 void	dodefine(Tokenrow *);
 void	doadefine(Tokenrow *, int);
-void	doinclude(Tokenrow *);
+void	doinclude(Tokenrow *, int);
 void	doif(Tokenrow *, enum kwtype);
-void	expand(Tokenrow *, Nlist *);
+void	dopragma(Tokenrow *);
+void	expand(Tokenrow *, Nlist *, int);
 void	builtin(Tokenrow *, int);
-int	gatherargs(Tokenrow *, Tokenrow **, int *);
+int	gatherargs(Tokenrow *, Tokenrow **, int, int *);
 void	substargs(Nlist *, Tokenrow *, Tokenrow **);
-void	expandrow(Tokenrow *, char *);
+void	expandrow(Tokenrow *, char *, int);
 void	maketokenrow(int, Tokenrow *);
 Tokenrow *copytokenrow(Tokenrow *, Tokenrow *);
 Token	*growtokenrow(Tokenrow *);

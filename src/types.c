@@ -142,7 +142,7 @@ void type_init(int argc, char *argv[]) {
 	pointersym->u.limits.max.p = (void*)ones(8*IR->ptrmetric.size);
 	pointersym->u.limits.min.p = 0;
 	voidptype = ptr(voidtype);
-	funcptype = ptr(func(voidtype, NULL, 1));
+	funcptype = ptr(func(voidtype, NULL, 1, NULL));
 	charptype = ptr(chartype);
 #define xx(v,t) if (v==NULL && t->size==voidptype->size && t->align==voidptype->align) v=t
 	xx(unsignedptr,unsignedshort);
@@ -246,12 +246,13 @@ Type qual(int op, Type ty) {
 	}
 	return ty;
 }
-Type func(Type ty, Type *proto, int style) {
+Type func(Type ty, Type *proto, int style, FunctionAttr *attr) {
 	if (ty && (isarray(ty) || isfunc(ty)))
 		error("illegal return type `%t'\n", ty);
 	ty = type(FUNCTION, ty, 0, 0, NULL);
 	ty->u.f.proto = proto;
 	ty->u.f.oldstyle = style;
+	ty->u.f.attr = attr;
 	return ty;
 }
 Type freturn(Type ty) {
@@ -388,6 +389,53 @@ Type signedint(Type ty) {
 #undef xx
 	assert(0); return NULL;
 }
+
+FunctionAttr *compose_attr(FunctionAttr *fa1, FunctionAttr *fa2)
+{
+	FunctionAttr *fa;
+
+	if (fa1 == fa2) return fa1;
+
+	if (!fa1) return fa2;
+	if (!fa2) return fa1;
+
+	// special cases - 
+	// pascal / stdcall / cdecl...
+	// function_vector, register x
+	// these should be checked by eqtype. 
+
+	NEW0(fa, 0);
+
+	if (fa1->pascal && fa2->pascal) fa->pascal = 1;
+	if (fa1->stdcall && fa2->stdcall) fa->stdcall = 1;
+	if (!fa->pascal && !fa->stdcall) fa->cdecl = 1;
+
+	if (fa1->function_vector) {
+		fa->function_vector = fa1->function_vector;
+		fa->registerX = fa1->registerA;
+		fa->registerX = fa1->registerX;
+		fa->registerX = fa1->registerY;
+	} else {
+		fa->function_vector = fa2->function_vector;
+		fa->registerX = fa2->registerA;		
+		fa->registerX = fa2->registerX;		
+		fa->registerX = fa2->registerY;		
+	}
+
+	// check this...
+	fa->segment = fa1->segment;
+	if (!fa->segment) fa->segment = fa2->segment;
+
+
+	fa->noreturn  = fa1->noreturn | fa2->noreturn;
+	fa->near  = fa1->near | fa2->near;
+	fa->databank  = fa1->databank | fa2->databank;
+	fa->debug  = fa1->debug | fa2->debug;
+	fa->function_inline  = fa1->function_inline | fa2->function_inline;
+
+	return fa;
+}
+
 Type compose(Type ty1, Type ty2) {
 	if (ty1 == ty2)
 		return ty1;
@@ -406,15 +454,18 @@ Type compose(Type ty1, Type ty2) {
 			 if (ty2->size && ty2->type->size && ty1->size == 0)
 			 	return array(ty, ty2->size/ty2->type->size, ty2->align);
 			 return array(ty, 0, 0);    }
+
 	case FUNCTION: { Type *p1  = ty1->u.f.proto, *p2 = ty2->u.f.proto;
 			 Type ty   = compose(ty1->type, ty2->type);
 			 List tlist = NULL;
+			 FunctionAttr *attr = compose_attr(ty1->u.f.attr, ty2->u.f.attr);
+
 			 if (p1 == NULL && p2 == NULL)
-			 	return func(ty, NULL, 1);
+			 	return func(ty, NULL, 1, attr);
 			 if (p1 && p2 == NULL)
-			 	return func(ty, p1, ty1->u.f.oldstyle);
+			 	return func(ty, p1, ty1->u.f.oldstyle, attr);
 			 if (p2 && p1 == NULL)
-			 	return func(ty, p2, ty2->u.f.oldstyle);
+			 	return func(ty, p2, ty2->u.f.oldstyle, attr);
 			 for ( ; *p1 && *p2; p1++, p2++) {
 			 	Type ty = compose(unqual(*p1), unqual(*p2));
 			 	if (isconst(*p1)    || isconst(*p2))
@@ -424,7 +475,7 @@ Type compose(Type ty1, Type ty2) {
 			 	tlist = append(ty, tlist);
 			 }
 			 assert(*p1 == NULL && *p2 == NULL);
-			 return func(ty, ltov(&tlist, PERM), 0); }
+			 return func(ty, ltov(&tlist, PERM), 0, attr); }
 	}
 	assert(0); return NULL;
 }
@@ -524,7 +575,7 @@ Type ftype(Type rty, ...) {
 	for ( ; ty != NULL; ty = va_arg(ap, Type))
 		list = append(ty, list);
 	va_end(ap);
-	return func(rty, ltov(&list, PERM), 0);
+	return func(rty, ltov(&list, PERM), 0, NULL);
 }
 
 /* isfield - if name is a field in flist, return pointer to the field structure */
@@ -622,7 +673,7 @@ void printproto(Symbol p, Symbol callee[]) {
 		else
 			for (i = 0; callee[i]; i++)
 				list = append(callee[i]->type, list);
-		printdecl(p, func(freturn(p->type), ltov(&list, PERM), 0));
+		printdecl(p, func(freturn(p->type), ltov(&list, PERM), 0, NULL));
 	}
 }
 

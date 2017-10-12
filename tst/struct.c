@@ -1,7 +1,7 @@
 typedef struct point { int x,y; } point;
 typedef struct rect { point pt1, pt2; } rect;
 
-point addpoint(point p1, point p2) {	/* add two points */
+point [[pascal]] addpoint(point p1, point p2) {	/* add two points */
 	p1.x += p2.x;
 	p1.y += p2.y;
 	return p1;
@@ -10,7 +10,7 @@ point addpoint(point p1, point p2) {	/* add two points */
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-rect canonrect(rect r) {		/* canonicalize rectangle coordinates */
+rect [[pascal]] canonrect(rect r) {		/* canonicalize rectangle coordinates */
 	rect temp;
 
 	temp.pt1.x = min(r.pt1.x, r.pt2.x);

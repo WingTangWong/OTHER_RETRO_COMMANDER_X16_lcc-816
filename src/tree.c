@@ -169,6 +169,7 @@ char *opname(int op) {
 	"NE",
 	"JUMP",
 	"LABEL",
+	"XCALL",
 	"AND",
 	"NOT",
 	"OR",
