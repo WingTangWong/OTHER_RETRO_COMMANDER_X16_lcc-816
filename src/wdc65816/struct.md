@@ -133,7 +133,9 @@ stmt: ASGNB(INDIRP4(vregp),INDIRB(vregp)) ^{
 stmt: ASGNB(vregp, INDIRB(address)) ^{
 	copy_struct(p, kids, nts);
 }
-
+stmt: ASGNB(vregp, LOADB(INDIRB(vregp))) ^{
+	copy_struct(p, kids, nts);
+}
 
 stmt: ASGNB(vregp, INDIRB(reg)) ^{
 

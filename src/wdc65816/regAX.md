@@ -25,6 +25,40 @@ regA: LOADU2(const) {
 # address ? need to check short/long m...
 
 
+regAX: CNSTI4 {
+    lda #%a
+    ldx #^%a
+} 2
+
+regAX: CNSTU4 {
+    lda #%a
+    ldx #^%a
+} 2
+
+regAX: CNSTP4 {
+    lda #%a
+    ldx #^%a
+} 2
+
+# regAX : reg causes problems.
+
+regAX:  INDIRI4(vregp) {
+    lda %0
+    ldx %0+2    
+} 2
+
+regAX:  INDIRU4(vregp) {
+    lda %0
+    ldx %0+2    
+} 2
+
+
+regAX:  INDIRP4(vregp) {
+    lda %0
+    ldx %0+2    
+} 2
+
+
 regAX: vregp {
     tdc
     clc
@@ -88,11 +122,6 @@ regAX: LOADP4(const)  {
 regAX: address {
 	lda #%0
 	ldx #^%0
-} 2
-
-regAX: reg {
-	lda %0
-	ldx %0+2
 } 2
 
 

@@ -92,7 +92,7 @@ static void sign_extend_32(Node p, Node *kids, short *nts, unsigned size) {
 			_("lda %0")
 			_("ldx #0")
 			_("cmp #0")
-			_("__bpl @ok")
+			_("branch pl, @ok")
 
 			_("dex")
 
@@ -216,5 +216,11 @@ reg: CVII4(LSHI2(INDIRI2(vregp), const_1)) {
         stx %c+2
 } 8
 
-
+#reg: LSHI4(CVII4(INDIRI2(vregp)), const_1) {
+#	lda %0
+#	sta %c
+#	lda #0
+#	rol
+#	sta %c+2
+#} 5
 

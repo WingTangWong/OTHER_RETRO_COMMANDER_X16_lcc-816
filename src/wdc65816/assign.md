@@ -56,7 +56,16 @@ stmt: ASGNI2(vregp, rc) {
     sta %0
 } 2
 
+# this is here since constant addresses are no longer simplified.
+#stmt: ASGNU2(ADDP4(vregp, const), rc) {
+#    lda %2
+#    sta %0+%1
+#} 2
 
+#stmt: ASGNI2(ADDP4(vregp, const), rc) {
+#    lda %2
+#    sta %0+%1
+#} 2
 
 
 # 32-bits
@@ -159,6 +168,7 @@ stmt: ASGNI4(address_with_modifier, reg) {
 # 0-optimizations.
 
 # todo -- need to rep/sep if vregp is struct or array.
+# todo -- these are sometimes detrimental to the optimizer!
 stmt: ASGNU1(vregp, const_0) {
     stz %0
 } 1

@@ -227,6 +227,7 @@ reg: INDIRU1(ADDP4(CVII4(CVUI2(INDIRU1(vregp))), address_with_modifier)) {
 # for an array, a negative index is treated as undefined, therefore
 # always treat as unsigned. (not true for pointers -- cp[-1] is common. )
 
+# ack! these interfere with ctype[1+n], for now.
 address: ADDP4(address, const) "%0+%1"
 address_with_modifier: ADDP4(address_with_modifier, const) "%0+%1"
 

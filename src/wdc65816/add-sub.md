@@ -241,7 +241,7 @@ reg: ADDP4(CVII4(INDIRI2(vregp)), INDIRP4(vregp)) {
     ldx #0
     lda %0
     cmp #0
-    __bpl @ok
+    branch pl, @ok
     dex
 @ok
     clc

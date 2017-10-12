@@ -5,7 +5,7 @@
 #
 
 stmt: JUMPV(address) {
-    __bra %0
+    branch %0
 } 1
 
 
@@ -15,52 +15,52 @@ stmt: JUMPV(address) {
 stmt: EQI2(rc, rc) {
     lda %0
     cmp %1
-    __beq %a
+    branch eq, %a
 } 3
 
 
 stmt: EQU2(rc, rc) {
     lda %0
     cmp %1
-    __beq %a
+    branch eq, %a
 } 3
 
 stmt: NEI2(rc, rc) {
     lda %0
     cmp %1
-    __bne %a
+    branch ne, %a
 } 3
 
 stmt: NEU2(rc, rc) {
     lda %0
     cmp %1
-    __bne %a
+    branch ne, %a
 } 4
 
 
 stmt: GEU2(rc, rc) {
     lda %0
     cmp %1
-    __buge %a
+    branch unsigned ge, %a
 } 4
 
 stmt: LEU2(rc, rc) {
     lda %0
     cmp %1
-    __bule %a
+    branch unsigned le, %a
 } 4
 
 # reversed order ?
 stmt: GTU2(rc, rc) {
     lda %0
     cmp %1
-    __bugt %a
+    branch unsigned gt, %a
 } 4
 
 stmt: LTU2(rc, rc) {
     lda %0
     cmp %1
-    __bult %a
+    branch unsigned lt, %a
 } 4
 
 
@@ -70,23 +70,23 @@ stmt: LTU2(rc, rc) {
 stmt: LTI2(rc, const_positive) {
     lda %0
     cmp #0
-    __bmi %a
+    branch mi, %a
     cmp #%1
-    __bcc %a
+    branch cc, %a
 } 5
 
 stmt: LTI2(rc, const_0) {
     lda %0
     cmp #0
-    __bmi %a
+    branch mi, %a
 } 3
 
 stmt: LEI2(rc, const_positive) {
     lda %0
     cmp #0
-    __bmi %a
+    branch mi, %a
     cmp #%1+1
-    __bcc %a
+    branch cc, %a
 } 5
 
 
@@ -95,7 +95,7 @@ stmt: LTI2(rc, rc) {
     lda %0
     sec
     sbc %1
-    __bslt %a
+    branch signed lt, %a
 } 10
 
 
@@ -104,14 +104,14 @@ stmt: LEI2(rc, rc) {
     lda %0
     sec
     sbc %1
-    __bsle %a
+    branch signed le, %a
 } 10
 
 stmt: GTI2(rc, rc) {
     lda %0
     sec
     sbc %1
-    __bsgt %a
+    branch signed gt, %a
 } 10
 
 
@@ -119,13 +119,13 @@ stmt: GEI2(rc, rc) {
     lda %0
     sec
     sbc %1
-    __bsge %a
+    branch signed ge, %a
 } 10
 
 stmt: GEI2(rc, const_0) {
     lda %0
     cmp #0
-    __bpl %a
+    branch pl, %a
 } 3
 
 
@@ -135,37 +135,37 @@ stmt: GEI2(rc, const_0) {
 stmt: NEU4(reg, reg) {
     lda %0
     cmp %1
-    __bne %a
+    branch ne, %a
     lda %0+2
     cmp %1+2
-    __bne %a
+    branch ne, %a
 } 6
 
 stmt: NEI4(reg, reg) {
     lda %0
     cmp %1
-    __bne %a
+    branch ne, %a
     lda %0+2
     cmp %1+2
-    __bne %a
+    branch ne, %a
 } 6
 
 stmt: NEU4(reg, const) {
     lda %0
     cmp #%1
-    __bne %a
+    branch ne, %a
     lda %0+2
     cmp #^%1
-    __bne %a
+    branch ne, %a
 } 6
 
 stmt: NEI4(reg, const) {
     lda %0
     cmp #%1
-    __bne %a
+    branch ne, %a
     lda %0+2
     cmp #^%1
-    __bne %a
+    branch ne, %a
 } 6
 
 
@@ -174,7 +174,7 @@ stmt: NEU4(LOADU4(INDIRP4(reg)),const_0) {
     lda [%0]
     ora [%0],y
     cmp #0
-    __bne %a
+    branch ne, %a
 } 5
 
 stmt: EQU4(LOADU4(INDIRP4(reg)),const_0) {
@@ -182,7 +182,7 @@ stmt: EQU4(LOADU4(INDIRP4(reg)),const_0) {
     lda [%0]
     ora [%0],y
     cmp #0
-    __beq %a
+    branch eq, %a
 } 5
 
 
@@ -191,14 +191,14 @@ stmt: NEU4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #%1
-    __bne %a
+    branch ne, %a
 } 4
 
 stmt: NEI4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #%1
-    __bne %a
+    branch ne, %a
 } 4
 
 
@@ -206,24 +206,24 @@ stmt: EQU4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #0
-    __beq %a
+    branch eq, %a
 } 4
 
 stmt: EQI4(reg, const_0) {
     lda %0
     ora %0+2
     cmp #0
-    __beq %a
+    branch eq, %a
 } 4
 
 
 stmt: EQU4(reg, const) {
     lda %0
     cmp #%1
-    __bne @no
+    branch ne, @no
     lda %0+2
     cmp #^%1
-    __beq %a
+    branch eq, %a
 @no
 } 6
 

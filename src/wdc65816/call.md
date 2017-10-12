@@ -1,3 +1,5 @@
+# -*- lburg -*-
+
 # call.md
 
 %{
@@ -349,7 +351,20 @@ reg: CALLP4(const_or_address) ^{
 # second argument is location (vregp, addrl, addrg) for the return value.
 # if pascal, pull and store after the call.
 # if cdecl, push pointer before the call.
-stmt: CALLB(const_or_address, vregp) ^{
+
+
+# callb argument may be ADDRLP4, ADDRGP4, VREGP, or INDIRP4(VREGP)
+# ADDRGP and INDIRP4 are pointers.
+
+call_b_stack_parm: VREGP "%a" 0
+#call_b_stack_parm: INDIRP4(call_b_stack_parm) "%0" 0
+call_b_stack_parm: ADDRLP4 "%a" 0
+call_b_stack_parm: ADDRFP4 "%a" 0
+
+# this is sucky.  is there a way for the CALLB argument to know if the function
+# is pascal or cdecl? CALLB(...) is_pascal() and CALLB(...) is_not_pascal?
+
+stmt: CALLB(const_or_address, call_b_stack_parm) ^{
 
 	int pascal = function_is_pascal(p);
 	int size = function_return_size(p);
@@ -357,6 +372,7 @@ stmt: CALLB(const_or_address, vregp) ^{
 
 
 	if (!pascal) {
+		// lp or vregp
 		EMIT(
 			_("pea 0")
 			_("tdc")
@@ -381,6 +397,70 @@ stmt: CALLB(const_or_address, vregp) ^{
 		framesize = ofs;
 	}
 } 1
+
+
+stmt: CALLB(const_or_address, const_or_address) ^{
+
+	int pascal = function_is_pascal(p);
+	int size = function_return_size(p);
+
+
+
+	if (!pascal) {
+		// lp or vregp
+		EMIT(
+			_("pea %1")
+			_("pea ^%1")
+		);
+	}
+
+	call_direct(p, kids, nts);
+	// if pascal, pull into vregp.
+	if (pascal) {
+		int i;
+		int ofs = framesize;
+		for (i = 0; i < size; i += 2) {
+			framesize = i;
+			EMIT(
+				_("pla")
+				_("sta %1+%F")
+			);
+		}
+		framesize = ofs;
+	}
+} 1
+
+stmt: CALLB(const_or_address, reg) ^{
+
+	int pascal = function_is_pascal(p);
+	int size = function_return_size(p);
+
+
+
+	if (!pascal) {
+		// lp or vregp
+		EMIT(
+			_("pei %1+2")
+			_("pei %1")
+		);
+	}
+
+	call_direct(p, kids, nts);
+	// if pascal, pull into vregp.
+	if (pascal) {
+		int i;
+		int ofs = framesize;
+		for (i = 0; i < size; i += 2) {
+			framesize = i;
+			EMIT(
+				_("pla")
+				_("sta %1+%F")
+			);
+		}
+		framesize = ofs;
+	}
+} 1
+
 
 
 reg: CALLV(reg) ^{

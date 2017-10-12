@@ -51,3 +51,20 @@ stmt: RETP4(regAX) "# regAX return\n" no_pascal_return(a, 0)
 stmt: RETU4(regAX) "# regAX return\n" no_pascal_return(a, 0)
 stmt: RETI4(regAX) "# regAX return\n" no_pascal_return(a, 0)
 
+stmt: RETU2(regA) "# regA return\n" no_pascal_return(a, 0)
+stmt: RETI2(regA) "# regA return\n" no_pascal_return(a, 0)
+
+stmt: RETP4(reg) {
+	lda %0
+	ldx %0+2
+} no_pascal_return(a, 2)
+
+stmt: RETU4(reg) {
+	lda %0
+	ldx %0+2
+} no_pascal_return(a, 2)
+
+stmt: RETI4(reg) {
+	lda %0
+	ldx %0+2
+} no_pascal_return(a, 2)

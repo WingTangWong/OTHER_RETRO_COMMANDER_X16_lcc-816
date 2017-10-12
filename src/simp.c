@@ -335,16 +335,38 @@ Tree simplify2(int op, Type ty, Tree l, Tree r, int addp) {
 				break;
 
 			// kws -- don't simplify address + const.  screws up later optimizations.
+			// need to re-arrange 	
 
 			// __ctype[x+1] -> __ctype+1,x.  this is wrong on the 816.
 			// however, it's needed for static initialization.
 
-			if (addp && IR->address
+			// if this is an auto (dp register), simplify it
+			//if (!addp && isaddrop(l->op) && l->u.sym->sclass != AUTO) break;
+
+			/*
+				65816 --
+				ADDP(addi(reg, const), __ctype) generates good code.
+				ADDP(reg, addp(__ctype, const)) generages terrible code.
+
+			todo 
+			fix
+			ADDP4(
+				CVII4(INDIRI2(VREGP(c))), 
+				ADDP4(ADDRGP4(__ctype), CNSTI4(1))
+			)
+
+
+			 */
+
+
+			if (/* addp && */ IR->address
 			&&  isaddrop(l->op)
 			&& (r->op == CNST+I && r->u.v.i <= longtype->u.sym->u.limits.max.i
 			    && r->u.v.i >= longtype->u.sym->u.limits.min.i
 			||  r->op == CNST+U && r->u.v.u <= longtype->u.sym->u.limits.max.i))
-				return addrtree(l, cast(r, longtype)->u.v.i, ty);
+				if (addp || (l->u.sym->sclass == AUTO && l->u.sym->x.name == NULL)) return addrtree(l, cast(r, longtype)->u.v.i, ty);
+
+
 
 			if (addp && IR->address
 			&&  l->op == ADD+P && isaddrop(l->kids[1]->op)
@@ -353,6 +375,18 @@ Tree simplify2(int op, Type ty, Tree l, Tree r, int addp) {
 			||  r->op == CNST+U && r->u.v.u <= longtype->u.sym->u.limits.max.i))
 				return simplify(ADD+P, ty, l->kids[0],
 					addrtree(l->kids[1], cast(r, longtype)->u.v.i, ty));
+
+
+			// ???
+			if (l->op == RIGHT && l->kids[1])
+				return tree(RIGHT, ty, l->kids[0],
+					simplify(ADD+P, ty, l->kids[1], r));
+
+			else if (l->op == RIGHT && l->kids[0])
+				return tree(RIGHT, ty,
+					simplify(ADD+P, ty, l->kids[0], r), NULL);
+
+			if (!addp) break;
 
 			/* kws -- add ADD+U / SUB+U support. */
 			if ((l->op == ADD+I || l->op == SUB+I || l->op == ADD+U || l->op == SUB+U)
@@ -371,20 +405,14 @@ Tree simplify2(int op, Type ty, Tree l, Tree r, int addp) {
 					simplify(ADD+P, ty, r->kids[0],
 					simplify(ADD, r->kids[1]->type, l->kids[1], r->kids[1])));
 
-			if (l->op == RIGHT && l->kids[1])
-				return tree(RIGHT, ty, l->kids[0],
-					simplify(ADD+P, ty, l->kids[1], r));
 
-			else if (l->op == RIGHT && l->kids[0])
-				return tree(RIGHT, ty,
-					simplify(ADD+P, ty, l->kids[0], r), NULL);
 
 			/*
 			 * kws/65816 -- above logic, but there's an extra CVU/I from 16-bit
 			 * to 32-bit pointer
 			 */
 			// unsigned.
-			if (addp && isaddrop(r->op) && generic(l->op) == CVU) {
+			if (isaddrop(r->op) && generic(l->op) == CVU) {
 				Tree ll = l->kids[0];
 				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
 
@@ -395,7 +423,7 @@ Tree simplify2(int op, Type ty, Tree l, Tree r, int addp) {
 				}
 			}
 			// signed.
-			if (addp && isaddrop(r->op) && generic(l->op) == CVI) {
+			if (isaddrop(r->op) && generic(l->op) == CVI) {
 				Tree ll = l->kids[0];
 				if (generic(ll->op) == ADD && generic(ll->kids[1]->op) == CNST) {
 

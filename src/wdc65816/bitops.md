@@ -81,3 +81,118 @@ reg: NEGI2(reg) {
     sta %c
 } 4
 
+
+reg: BANDI4(reg, reg) {
+    lda %0
+    and %1
+    sta %c
+    lda %0+2
+    and %1+2
+    sta %c+2
+} 6
+
+
+reg: BANDU4(reg, reg) {
+    lda %0
+    and %1
+    sta %c
+    lda %0+2
+    and %1+2
+    sta %c+2
+} 6
+
+
+reg: BANDI4(reg, const) {
+    lda %0
+    and #%1
+    sta %c
+    lda %0+2
+    and #^%1
+    sta %c+2
+} 6
+
+reg: BANDU4(reg, const) {
+    lda %0
+    and #%1
+    sta %c
+    lda %0+2
+    and #^%1
+    sta %c+2
+} 6
+
+
+reg: BORI4(reg, reg) {
+    lda %0
+    ora %1
+    sta %c
+    lda %0+2
+    ora %1+2
+    sta %c+2
+} 6
+
+
+reg: BORU4(reg, reg) {
+    lda %0
+    ora %1
+    sta %c
+    lda %0+2
+    ora %1+2
+    sta %c+2
+} 6
+
+
+reg: BORI4(reg, const) {
+    lda %0
+    ora #%1
+    sta %c
+    lda %0+2
+    ora #^%1
+    sta %c+2
+} 6
+
+reg: BORU4(reg, const) {
+    lda %0
+    ora #%1
+    sta %c
+    lda %0+2
+    ora #^%1
+    sta %c+2
+} 6
+
+reg: BXORI4(reg, reg) {
+    lda %0
+    eor %1
+    sta %c
+    lda %0+2
+    eor %1+2
+    sta %c+2
+} 6
+
+
+reg: BXORU4(reg, reg) {
+    lda %0
+    eor %1
+    sta %c
+    lda %0+2
+    eor %1+2
+    sta %c+2
+} 6
+
+
+reg: BXORI4(reg, const) {
+    lda %0
+    eor #%1
+    sta %c
+    lda %0+2
+    eor #^%1
+    sta %c+2
+} 6
+
+reg: BXORU4(reg, const) {
+    lda %0
+    eor #%1
+    sta %c
+    lda %0+2
+    eor #^%1
+    sta %c+2
+} 6

@@ -57,6 +57,15 @@ stmt: ARGP4(address) {
     pea %0
 } 2
 
+# stmt: ARGP4(INDIRP4(address)) {
+#     lda %0+2
+#     pha
+#     lda %0
+#     pha
+# } 2
+
+
+
 stmt: ARGU4(reg) {
     pei %0+2
     pei %0

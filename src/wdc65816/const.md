@@ -39,6 +39,11 @@ const_3: CNSTI2 "3" range(a, 3, 3)
 const_3: CNSTI4 "3" range(a, 3, 3)
 const_3: CNSTI8 "3" range(a, 3, 3)
 
+const_4: CNSTI1 "4" range(a, 4, 4)
+const_4: CNSTI2 "4" range(a, 4, 4)
+const_4: CNSTI4 "4" range(a, 4, 4)
+const_4: CNSTI8 "4" range(a, 4, 4)
+
 const_5: CNSTU1 "5" range(a, 5, 5)
 const_5: CNSTU2 "5" range(a, 5, 5)
 const_5: CNSTU4 "5" range(a, 5, 5)
@@ -112,6 +117,8 @@ const_16_bit_minus_4: CNSTI8 "%a" range(a, 0, 0xffff-4)
 
 const_positive: CNSTU2 "%a" range(a, 0x0000, 0x7fff)
 const_positive: CNSTI2 "%a" range(a, 0x0000, 0x7fff)
+const_positive: CNSTU4 "%a" range(a, 0x0000, 0x7fff)
+const_positive: CNSTI4 "%a" range(a, 0x0000, 0x7fff)
 
 const_negative: CNSTU2 "%a" range(a, -32768, -1)
 const_negative: CNSTI2 "%a" range(a, -32768, -1)
@@ -128,4 +135,5 @@ const: CNSTI8 "%a"
 
 const: CNSTP4 "%a"
 const: ADDRGP4 "%a"
+
 
