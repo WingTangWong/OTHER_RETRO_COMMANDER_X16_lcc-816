@@ -475,6 +475,8 @@ stringify(Tokenrow *vp)
 void
 builtin(Tokenrow *trp, int biname)
 {
+	static counter = 0;
+
 	char *op;
 	Token *tp;
 	Source *s;
@@ -500,6 +502,11 @@ builtin(Tokenrow *trp, int biname)
 	case KLINENO:
 		tp->type = NUMBER;
 		op = outnum(op-1, s->line);
+		break;
+
+	case KCOUNTER:
+		tp->type = NUMBER;
+		op = outnum(op-1, counter++);
 		break;
 
 	case KFILE: {
