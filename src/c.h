@@ -332,6 +332,7 @@ struct functionattr {
 	unsigned cdecl:1;
 	unsigned noreturn:1;
 	unsigned near:1;
+	unsigned interrupt:1;
 	unsigned databank:1;
 	unsigned debug:1;
 	unsigned function_inline:1;
