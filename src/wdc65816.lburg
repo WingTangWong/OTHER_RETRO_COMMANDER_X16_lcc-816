@@ -263,7 +263,7 @@ address_with_modifier: ADDRFP4 "<%0" 0
 
 #address_in_bank: ADDRGP4 "|%a" longMM ? LBURG_MAX : 0
 
-%include "src/wdc65816/const.md"
+%include "src/wdc65816/const.lburg"
 
 
 
@@ -362,27 +362,27 @@ reg: addressDP {
 rc: const  "%#%0"
 rc: reg    "%0"
 
-%include "src/wdc65816/assign.md"
-%include "src/wdc65816/load.md"
-%include "src/wdc65816/indir.md"
-%include "src/wdc65816/add-sub.md"
-%include "src/wdc65816/bitops.md"
-%include "src/wdc65816/shift.md"
-%include "src/wdc65816/multiply.md"
-%include "src/wdc65816/call.md"
-%include "src/wdc65816/builtin.md"
-%include "src/wdc65816/arg.md"
-%include "src/wdc65816/branch.md"
-%include "src/wdc65816/convert.md"
-%include "src/wdc65816/return.md"
-%include "src/wdc65816/struct.md"
-%include "src/wdc65816/memop.md"
+%include "src/wdc65816/assign.lburg"
+%include "src/wdc65816/load.lburg"
+%include "src/wdc65816/indir.lburg"
+%include "src/wdc65816/add-sub.lburg"
+%include "src/wdc65816/bitops.lburg"
+%include "src/wdc65816/shift.lburg"
+%include "src/wdc65816/multiply.lburg"
+%include "src/wdc65816/call.lburg"
+%include "src/wdc65816/builtin.lburg"
+%include "src/wdc65816/arg.lburg"
+%include "src/wdc65816/branch.lburg"
+%include "src/wdc65816/convert.lburg"
+%include "src/wdc65816/return.lburg"
+%include "src/wdc65816/struct.lburg"
+%include "src/wdc65816/memop.lburg"
 
 
-%include "src/wdc65816/tadpole.md"
-%include "src/wdc65816/regAX.md"
+%include "src/wdc65816/tadpole.lburg"
+%include "src/wdc65816/regAX.lburg"
 
-%include "src/wdc65816/array.md"
+%include "src/wdc65816/array.lburg"
 
 
 # switch jump tables

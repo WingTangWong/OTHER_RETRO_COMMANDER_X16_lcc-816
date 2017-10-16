@@ -116,19 +116,19 @@ $Bx86$O:	$Bx86.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86.c
 $Bx86linux$O:	$Bx86linux.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bx86linux.c
 $Bwdc65816$O:	$Bwdc65816.c;	$(CC) $(CFLAGS) -c -Isrc -o $@ $Bwdc65816.c
 
-$Bdagcheck.c:	$Blburg$E src/dagcheck.md; $Blburg src/dagcheck.md $@
-$Balpha.c:	$Blburg$E src/alpha.md;    $Blburg src/alpha.md    $@
-$Bmips.c:	$Blburg$E src/mips.md;     $Blburg src/mips.md     $@
-$Bsparc.c:	$Blburg$E src/sparc.md;    $Blburg src/sparc.md    $@
-$Bx86.c:	$Blburg$E src/x86.md;      $Blburg src/x86.md      $@
-$Bx86linux.c:	$Blburg$E src/x86linux.md; $Blburg src/x86linux.md $@
+$Bdagcheck.c:	$Blburg$E src/dagcheck.lburg; $Blburg src/dagcheck.lburg $@
+$Balpha.c:	$Blburg$E src/alpha.lburg;    $Blburg src/alpha.lburg    $@
+$Bmips.c:	$Blburg$E src/mips.lburg;     $Blburg src/mips.lburg     $@
+$Bsparc.c:	$Blburg$E src/sparc.lburg;    $Blburg src/sparc.lburg    $@
+$Bx86.c:	$Blburg$E src/x86.lburg;      $Blburg src/x86.lburg      $@
+$Bx86linux.c:	$Blburg$E src/x86linux.lburg; $Blburg src/x86linux.lburg $@
 
-DEP816=add-sub.md arg.md assign.md bitops.md builtin.md call.md\
-const.md indir.md load.md multiply.md shift.md branch.md convert.md\
-return.md struct.md memop.md tadpole.md regAX.md array.md
+DEP816=add-sub.lburg arg.lburg assign.lburg bitops.lburg builtin.lburg call.lburg\
+const.lburg indir.lburg load.lburg multiply.lburg shift.lburg branch.lburg convert.lburg\
+return.lburg struct.lburg memop.lburg tadpole.lburg regAX.lburg array.lburg
 
-$Bwdc65816.c:	$Blburg$E src/wdc65816.md $(DEP816:%=src/wdc65816/%)
-	$Blburg src/wdc65816.md $@
+$Bwdc65816.c:	$Blburg$E src/wdc65816.lburg $(DEP816:%=src/wdc65816/%)
+	$Blburg src/wdc65816.lburg $@
 
 $Bbprint$E:	$Bbprint$O;		$(LD) $(LDFLAGS) -o $@ $Bbprint$O 
 $Bops$E:	$Bops$O;		$(LD) $(LDFLAGS) -o $@ $Bops$O 
