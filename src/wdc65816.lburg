@@ -617,7 +617,7 @@ static void segment(int n)
         case BSS:
         case DATA: 
         case LIT: 
-            print("\tend\n\n"); break;
+            print("}\n\n"); break;
         }
     }
 
@@ -626,7 +626,7 @@ static void segment(int n)
     case BSS:
     case DATA: 
     case LIT:
-        print("\n\tdata\n"); break;
+        print("data {\n"); break;
     }
 
 }
@@ -858,7 +858,7 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n)
     inFunction = 1;
     roffset = 0;
 
-    print("%s\tstart\n", f->x.name);
+    print("function %s {\n", f->x.name);
 
     if (pascal) {
         print("\tpragma pascal\n");
@@ -915,7 +915,6 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n)
     //assert(caller[i] == 0);
     offset = maxoffset = 0;
 
-    // todo -- if pascal, reverse argument order
     // todo -- if cdecl && returning a struct, %p0 is the return pointer
     // (and parameters += 4)
 
@@ -1027,10 +1026,6 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n)
     framesize = roundup(maxoffset, 2);
 
 
-
-    //print("\tbegin_stack\n");
-
-    //
     offset = framesize;
 
 /*
@@ -1046,20 +1041,12 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int n)
 
     emitcode();
 
-    /* clean up stack
-       various options..
-       caller cleanup, callee cleanup 
-       with/without b register
-       with/without pascal return convention
-       rts or rtl
-     */
-
 
     // todo check freturn(f->type) for return type, handle
 
 
 
-    print("\tend\n\n");
+    print("}\n\n");
     inFunction = 0;
     regRV = NULL;
     wdc_retv = NULL;
