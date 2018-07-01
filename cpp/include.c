@@ -167,9 +167,13 @@ syntax:
 void
 genline(void)
 {
+	extern int Pflag;
+
 	static Token ta = { UNCLASS };
 	static Tokenrow tr = { &ta, &ta, &ta+1, 1 };
 	uchar *p;
+
+	if (Pflag) return;
 
 	ta.t = p = (uchar*)outp;
 	strcpy((char*)p, "#line ");
